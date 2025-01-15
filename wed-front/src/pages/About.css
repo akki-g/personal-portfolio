@@ -1,0 +1,61 @@
+.content {
+  display: flex;
+  flex-wrap: wrap; /* Ensures responsiveness on smaller screens */
+  gap: 20px;
+  color: var(--text-color);
+  font-family: 'Roboto', sans-serif;
+}
+.left-column {
+  flex: 1 1 300px;
+  min-width: 250px;
+  max-width: 400px;
+}
+.right-column {
+  flex: 2 1 500px;
+  position: relative; /* So we can position the dot shape */
+  min-width: 300px;
+}
+  
+  /* TEXT BLOCKS */
+.info-block {
+  margin-bottom: 2em;
+}
+.info-block h2 {
+  font-weight: 700;
+  margin-bottom: 0.5em;
+  font-size: 1.2rem;
+}
+.info-block p,
+.info-block li {
+  font-size: 1rem;
+  margin-bottom: 0.5em;
+}
+.info-block ul {
+  margin-left: 1.5em;
+  list-style: disc;
+}
+  
+  /* IMAGE & DOT CLOUD */
+.profile-image {
+  width: 100%;
+  max-width: 400px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+}
+  /* CONTACT INFO */
+.contact p {
+  margin-bottom: 0.5em;
+}
+  
+  /* RESPONSIVE TWEAKS */
+@media (max-width: 768px) {
+  header {
+    font-size: 2rem;
+  }
+  .container {
+    padding: 20px 0;
+  }
+  .dot-cloud {
+    height: 300px;
+  }
+}

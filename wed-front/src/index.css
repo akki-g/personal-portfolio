@@ -1,33 +1,54 @@
 :root {
-  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
+  --bg-color: #fde7c6;
+  --text-color: #301605;
+  --border-color: #1a1a1a;
+  --toggle-bg: #fde7c6;
+  --git-hub-url: url('/images/github-mark.png');
+}
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+::-webkit-scrollbar {
+  display: none; 
+}
 
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 a {
   font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+  color: var(--text-color);
+  text-decoration: none;
 }
 a:hover {
-  color: #535bf2;
+  color: var(--text-color);
 }
 
-body {
+main {
+  --header-text-font: Impact, Haettenschweiler, 'Arial Narrow', sans-serif;
+  --normal-text-font: 'Roboto', sans-serif;
+  transition: background-color 1s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+html, body {
   margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-color);
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  transition: background-color 1s cubic-bezier(0.19, 1, 0.22, 1);
+  overflow: auto;
+}
+
+body[data-theme="dark"] {
+  --bg-color: #1a1a1a;
+  --text-color: #fdf8f4;
+  --border-color: #fdf8f4;
+  --toggle-bg: #1a1a1a;
+  --git-hub-url: url('/images/github-mark-white.png');
 }
 
 h1 {
@@ -46,9 +67,7 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
-button:hover {
-  border-color: #646cff;
-}
+
 button:focus,
 button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
@@ -56,13 +75,13 @@ button:focus-visible {
 
 @media (prefers-color-scheme: light) {
   :root {
-    color: #213547;
-    background-color: #ffffff;
+    color: var(--text-color);
+    background-color: var(--bg-color);
   }
   a:hover {
-    color: #747bff;
+    color: var(--text-color);
   }
   button {
-    background-color: #f9f9f9;
+    background-color: var(--bg-color);
   }
 }

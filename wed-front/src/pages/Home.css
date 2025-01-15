@@ -1,0 +1,236 @@
+.home-container {
+    width: 100%;
+    min-height: 100vh;
+    background-color: var(--bg-color);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding-top: 40px;
+    padding-bottom: 60px;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+.hero {
+    width: 100%;
+    height: 100vh;
+    color: var(--text-color);
+    display: flex;
+    flex-direction: column;
+    position: relative;
+
+}
+
+.hero-forefront-text {
+    line-height: 0.80;
+    z-index: 2;
+}
+
+.hero-forefront-text .firstName span,
+.hero-forefront-text .lastName span {
+    font-family: var(--header-text-font);
+    font-size: 26vw;
+    display: block;
+    color: var(--text-color); 
+    text-transform: uppercase;
+    transform: scaleX(0.85);
+    transform-origin: left;
+    font-stretch: narrower;
+    padding-left: 20px;
+}
+
+.hero-forefront-text .lastName span {
+    margin-left: 16.25vw;
+}
+
+.hero-background-shape {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 40vw;
+    height: 60vh;
+    background: linear-gradient(145deg, #eb7af9, #70d2ff);
+    z-index: 0; 
+}
+
+.hero-intro {
+
+    font-family: 'Roboto', sans-serif;
+    font-size: 2vw;
+    color: var(--text-color);
+    line-height: 1;
+    z-index: 2;
+    padding-top: 60px;
+    padding-left: 80px;
+}
+
+.projects-header {
+    margin-top: 6rem;
+    overflow: hidden;
+    border-top: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    padding: 1rem;
+    color: var(--text-color);
+}
+
+.scrolling-header {
+    font-family: var(--header-text-font);
+    font-size: 3rem;
+    font-weight: 900;
+    white-space: nowrap;
+    display: inline-block;
+    animation: scrollLeft 20s linear infinite;
+}
+
+.scrolling-header span {
+    padding: 0 1rem;
+}
+
+@keyframes scrollLeft {
+    0% {
+        transform: translateX(0);
+    }
+    100% {
+        transform: translateX(-50%);
+    }
+}
+
+
+.projects {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  }
+  
+.project-entry {
+    background-color: var(--bg-color); /* background color for entry */
+    border-bottom: 1px solid var(--border-color); /* border color for entry */
+    border-left: 1px solid var(--border-color);
+    border-right: 1px solid var(--border-color);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+    align-items: center;
+    padding: 5rem;
+    text-align: center;
+    color: var(--text-color);
+    overflow: hidden;
+    height: 500px;
+}
+.project-entry h3 {
+    font-family: var(--header-text-font);
+    font-size: 2rem;
+    margin-bottom: 1rem;
+}
+.project-entry p {
+    font-family: var(--normal-text-font);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+  /* Optional: Hover effect for entries */
+  .project-entry:hover {
+    transform: translateY(-5px);
+    border-top: 1px solid var(--border-color);;
+  }
+
+  .project-entry > div[class^="border-"] {
+    position: absolute;
+    background-color: var(--border-color);
+    transition: width 0.5s ease-in-out, height 0.5s ease-in-out;
+  }
+  
+  /* Top border */
+  .border-top {
+    top: 0;
+    left: 0;
+    height: 1px;      /* Thickness of the border */
+    width: 0%;
+  }
+  
+  /* Right border */
+  .border-right {
+    top: 0;
+    right: 0;
+    width: 1px;
+    height: 0%;
+  }
+  
+  /* Bottom border */
+  .border-bottom {
+    bottom: 0;
+    right: 0;
+    height: 1px;
+    width: 0%;
+  }
+  
+  /* Left border */
+  .border-left {
+    bottom: 0;
+    left: 0;
+    width: 1px;
+    height: 0%;
+  }
+  
+  /* On hover, animate each border to full length/height */
+  .project-entry:hover .border-top {
+    width: 100%;
+  }
+  
+  .project-entry:hover .border-right {
+    height: 100%;
+  }
+  
+  .project-entry:hover .border-bottom {
+    width: 100%;
+    left: 0; /* Ensure it expands from left side on hover */
+  }
+  
+  .project-entry:hover .border-left {
+    height: 100%;
+    top: 0; /* Ensure it expands from top on hover */
+  }
+  
+
+.contact-header {
+    margin-top: 0rem;
+    overflow: hidden;
+    border-top: 2px solid var(--border-color);
+    border-bottom: 2px solid var(--border-color);
+    padding: 1rem;
+    color: var(--text-color);
+}
+
+.contact-links {
+    display: flex;
+    justify-content: center;  /* center align the images horizontally */
+    gap: 2rem;                /* space between images */
+    padding: 2rem 0;
+  }
+  
+.contact-links a img {
+    width: 40px;              /* adjust size as needed */
+    height: auto;
+    transition: transform 0.1s ease;
+  }
+.contact-links a.github-logo {
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center;
+    transition: transform 0.1s ease;
+    /* Default logo for light theme */
+    background-image: var(--git-hub-url);
+ }
+ .contact-links a.linkedin-logo {
+  transition: transform 0.1s ease;
+ }
+.contact-links a {
+    font-size: 2rem;
+    transition: text-transform 0.1s ease;
+  }
+.contact-links a:hover {
+    transform: scale(1.5);    /* simple hover effect */
+  }
+.contact-links a:hover {
+    text-transform: scale(1.5);    /* simple hover effect */
+  }
