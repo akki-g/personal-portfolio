@@ -26,7 +26,7 @@ a:hover {
 }
 
 main {
-  --header-text-font: Impact, Haettenschweiler, 'Arial Narrow', sans-serif;
+  --header-text-font: Impact, 'Condensed', 'Arial Narrow', sans-serif;
   --normal-text-font: 'Roboto', sans-serif;
   transition: background-color 1s cubic-bezier(0.19, 1, 0.22, 1);
 }

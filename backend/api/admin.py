@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Project, Contact, About
+from .models import Project, Contact, About, Experience
 # Register your models here.
 
 @admin.register(Project)
@@ -20,7 +20,12 @@ class ContactAdmin(admin.ModelAdmin):
 
 @admin.register(About)
 class AboutAdmin(admin.ModelAdmin):
-    list_display = ['image1', 'image2', 'image3', 'image4', 'resume']
+    list_display = ['title', 'image1', 'image2', 'image3', 'image4', 'resume']
     search_fields = ['image1', 'image2', 'image3', 'image4', 'resume']
     list_filter = ['image1', 'image2', 'image3', 'image4', 'resume']    
 
+@admin.register(Experience)
+class ExperienceAdmin(admin.ModelAdmin):
+    list_display = ['title', 'company', 'role', 'start_mthyr', 'end_mthyr']
+    search_fields = ['title', 'company', 'role', 'start_mthyr', 'end_mthyr']
+    list_filter = ['start_mthyr', 'end_mthyr']

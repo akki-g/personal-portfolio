@@ -26,10 +26,26 @@ function Header() {
                         <Link to="/about">ABOUT</Link>
                     </li>
                 </ul>
-                <div className = "theme-toggle">
-                    <button onClick={toggleTheme}>
-                        {theme === 'light' ? '🌙' : '☀️'}
-                    </button>
+                <div className="theme-toggle">
+                {/* Toggle Container */}
+                    <div className="toggle-container">
+                        {/* Checkbox (hidden visually) */}
+                        <input
+                        type="checkbox"
+                        id="themeToggle"
+                        className="toggle-checkbox"
+                        checked={theme === 'dark'}
+                        onChange={toggleTheme}
+                        />
+                        {/* The label that becomes our slider track + handle */}
+                        <label className="toggle-label" htmlFor="themeToggle">
+                        <span className="toggle-handle">
+                            {/* Sun and moon icons inside the handle */}
+                            <span className="icon-sun">☀️</span>
+                            <span className="icon-moon">🌙</span>
+                        </span>
+                        </label>
+                    </div>
                 </div>
             </nav>
         </header>

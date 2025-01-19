@@ -1,0 +1,50 @@
+.experiences-container {
+    /* Basic layout styles; adjust to your theme */
+
+    justify-content: center;
+    align-items: center;
+
+    font-family: var(--header-text-font);
+    margin-left: 20vw;
+    margin-right: 10vw;
+  }
+.experiences-container h2 {
+    font-size: 2.5em;
+    margin-right: 10vw;
+    padding-left: 5vw;
+  }
+  /* Horizontal scroll container */
+  .experience-scroller {
+    display: flex;
+    overflow-x: auto;        /* Enables horizontal scrolling */
+    gap: 1rem;               /* Space between items */
+    margin-bottom: 1rem;
+ 
+    border-bottom: solid 2px var(--border-color);     /* Some vertical spacing around the scroller */
+  }
+  
+  .experience-item {
+  
+    font-family: var(--normal-text-font);
+    min-width: 120px;        /* Each tab at least 120px wide */
+    text-align: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    background-color: var(--bg-color);
+    border-radius: 4px;
+    transition: background-color 0.2s;
+  }
+  .experience-item:hover {
+    background-color: var(--bg-color);
+  }
+  .experience-item.active {
+    background-color: var(--bg-color);
+    font-weight: bold;
+  }
+  
+  .experience-detail {
+    padding-left: 2.5vw;
+    font-family: var(--normal-text-font);
+    margin-top: 1rem;
+  }
+  

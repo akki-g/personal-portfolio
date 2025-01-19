@@ -1,9 +1,86 @@
+.about-container {
+  width: 100%;
+  min-height: 100%;
+  background-color: var(--bg-color);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  padding-top: 40px;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+.about-intro {
+  width: 100%;
+  color: var(--text-color);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  padding-bottom: 60px;
+}
+
+.section {
+  /* Lay out text and image horizontally */
+  display: flex;
+  align-items: center;        /* Vertically center text and image */
+  justify-content: space-between; 
+  margin: 2rem 0;            /* Add spacing between rows */
+}
+
+.about-intro-text {
+  line-height: 1;
+  z-index: 2;
+  padding-left: 5vw;
+}
+.intro-1, .intro-2, .intro-3 span{
+  font-weight: 100;
+  font-size: 15rem;
+}
+.about-intro-text .intro-1 span {
+  font-family: var(--header-text-font);
+  display: block;
+  color: var(--text-color); 
+  transform: scaleX(0.85);
+  transform-origin: left;
+  font-stretch: narrower;
+  padding-left: 20px;
+}
+.about-intro-text .intro-2 span {
+  font-family: var(--header-text-font);
+  display: block;
+  color: var(--text-color); 
+  transform: scaleX(0.85);
+  transform-origin: left;
+  font-stretch: narrower;
+  padding-left: 0px;
+  margin-left: 5vw;
+}
+.about-intro-text .intro-3 span {
+  font-family: var(--header-text-font);
+  display: block;
+  color: var(--text-color); 
+  text-transform: uppercase;
+  transform: scaleX(0.85);
+  transform-origin: left;
+  font-stretch: narrower;
+  padding-left: 20px;
+}
+
+.about-intro-text .lastName span {
+  margin-left: 32vw;
+}
+.intro-image {
+  width: auto;         
+  max-height: 12rem;    /* Match or slightly under the text font-size for alignment */
+  margin-left: 5px;   /* Additional spacing if needed */
+  object-fit: contain; /* Keeps the full image in view without cropping */
+}
 .content {
   display: flex;
   flex-wrap: wrap; /* Ensures responsiveness on smaller screens */
   gap: 20px;
   color: var(--text-color);
   font-family: 'Roboto', sans-serif;
+  margin-left: 10vw;
 }
 .left-column {
   flex: 1 1 300px;
@@ -21,12 +98,14 @@
   margin-bottom: 2em;
 }
 .info-block h2 {
+  font-family: var(--header-text-font);
   font-weight: 700;
   margin-bottom: 0.5em;
   font-size: 1.2rem;
 }
 .info-block p,
 .info-block li {
+  font-family: var(--normal-text-font);
   font-size: 1rem;
   margin-bottom: 0.5em;
 }
@@ -48,14 +127,18 @@
 }
   
   /* RESPONSIVE TWEAKS */
-@media (max-width: 768px) {
-  header {
-    font-size: 2rem;
+  @media (max-width: 768px) {
+    .section {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  
+    .text-block,
+    .image-block {
+      max-width: 100%;
+    }
+  
+    .image-block img {
+      max-height: 200px; /* Smaller images on mobile */
+    }
   }
-  .container {
-    padding: 20px 0;
-  }
-  .dot-cloud {
-    height: 300px;
-  }
-}
