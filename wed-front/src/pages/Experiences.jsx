@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import './Experiences.css';
 import axios from 'axios';
+import apiClient from './AxiosInstance';
 
 function Experiences() {
   
@@ -8,9 +9,7 @@ function Experiences() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-      const token = import.meta.env.REACT_APP_API_TOKEN;
-      const headers = { Authorization: `Bearer ${token}` };
-      axios.get('https://api.its-akki.com/api/experiences', { headers })
+      apiClient.get('experiences')
       .then(response => {
         setExperiences(response.data);
       })
@@ -50,7 +49,7 @@ function Experiences() {
           <p>{activeExperience.description}</p>
         </div>
       ) : (
-        <p>No experiences available.</p>
+        <p>No experiences yet.</p>
       )}
       </div>
   );

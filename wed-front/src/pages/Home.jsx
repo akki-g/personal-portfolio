@@ -1,16 +1,15 @@
 import React, { useEffect, useState} from "react";
 import { Link } from "react-router-dom";
 import './Home.css';
+import apiClient from './AxiosInstance';
 import axios from 'axios';
 
 function Home() {
     const [projects, setProjects] = useState([]);  
     const [resume, setResume] = useState(null);
-    const token = import.meta.env.REACT_APP_API_TOKEN;
-    const headers = { Authorization: `Bearer ${token}` };
 
     useEffect(() => {
-        axios.get('https://api.its-akki.com/api/projects', { headers })
+        apiClient.get('projects/')
         .then(response => {
             setProjects(response.data);
         })
@@ -20,7 +19,7 @@ function Home() {
     }, []);
 
     useEffect(() => {
-        axios.get('https://api.its-akki.com/api/download-resume', { headers }, {
+        apiClient.get('download-resume',  {
             responseType: 'blob'
         })
         .then(response => {
@@ -135,5 +134,4 @@ function Home() {
         </main>
     );
 }
-
 export default Home;

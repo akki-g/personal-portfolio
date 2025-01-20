@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './About.css';
 import axios from 'axios';
 import './Experiences';
+import apiClient from './AxiosInstance';
 import Experiences from './Experiences';
 
 function About() {
@@ -10,13 +11,8 @@ function About() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        const token = import.meta.env.REACT_APP_API_TOKEN;
 
-        // Set up the headers with the Authorization token
-        const headers = {
-            Authorization: `Bearer ${token}`,
-        };
-        axios.get('https://api.its-akki.com/api/get_images/', { headers })
+        apiClient.get('get_images/')
           .then(response => {
             const data = response.data;
             setImages({
@@ -29,7 +25,7 @@ function About() {
           })
           .catch(error => {
             console.error('Error fetching images:', error);
-            setError(err);
+            setError(error);
             setLoading(false);
           });
       }, []);
