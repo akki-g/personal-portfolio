@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-68l)d6ldraql!h0ybu_37cmmaj#v!x$)l3-^%05--q)oxgsv)+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['its-akki.com', 'www.its-akki.com']
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -56,7 +56,9 @@ MIDDLEWARE = [
 ]
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:5173"
+    "http://localhost:5173",
+    'https://its-akki.com',
+    'https://www.its-akki.com'
 ]   
 
 REST_FRAMEWORK = {
