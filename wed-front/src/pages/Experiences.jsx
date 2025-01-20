@@ -8,7 +8,9 @@ function Experiences() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-      axios.get('https://api.its-akki.com/api/experiences')
+      const token = import.meta.env.REACT_APP_API_TOKEN;
+      const headers = { Authorization: `Bearer ${token}` };
+      axios.get('https://api.its-akki.com/api/experiences', { headers })
       .then(response => {
         setExperiences(response.data);
       })

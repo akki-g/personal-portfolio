@@ -6,8 +6,11 @@ import axios from 'axios';
 function Home() {
     const [projects, setProjects] = useState([]);  
     const [resume, setResume] = useState(null);
+    const token = import.meta.env.REACT_APP_API_TOKEN;
+    const headers = { Authorization: `Bearer ${token}` };
+
     useEffect(() => {
-        axios.get('https://api.its-akki.com/api/projects')
+        axios.get('https://api.its-akki.com/api/projects', { headers })
         .then(response => {
             setProjects(response.data);
         })
@@ -17,7 +20,7 @@ function Home() {
     }, []);
 
     useEffect(() => {
-        axios.get('https://api.its-akki.com/api/download-resume', {
+        axios.get('https://api.its-akki.com/api/download-resume', { headers }, {
             responseType: 'blob'
         })
         .then(response => {

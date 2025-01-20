@@ -4,6 +4,7 @@ from django.contrib.sites.shortcuts import get_current_site
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Project, Contact, About, Experience
 from .serializers import ProjectSerializer, ContactSerializer, AboutSerializer, ExperienceSerializer
@@ -11,6 +12,7 @@ from .serializers import ProjectSerializer, ContactSerializer, AboutSerializer, 
 # Create your views here.
 
 class ProjectListView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         projects = Project.objects.all()
         serializer = ProjectSerializer(projects, many=True)
@@ -23,6 +25,7 @@ class ProjectListView(APIView):
         return Response(serializer.errors, status=400)
 
 class ContactView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         contacts = Contact.objects.all()
         serializer = ContactSerializer(contacts, many=True)
@@ -35,6 +38,7 @@ class ContactView(APIView):
         return Response(serializer.errors, status=400)
     
 class AboutView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         about = About.objects.all()
         serializer = AboutSerializer(about, many=True)
@@ -47,6 +51,7 @@ class AboutView(APIView):
         return Response(serializer.errors, status=400)
     
 class ExperiencesListView(APIView):
+    permission_classes = [IsAuthenticated]
     def get(self, request):
         projects = Experience.objects.all()
         serializer = ExperienceSerializer(projects, many=True)

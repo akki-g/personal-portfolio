@@ -28,3 +28,14 @@
     opacity: 0;
     pointer-events: none;
 }
+@media (max-width: 768px) {
+    .preloader {
+      /* Adjust dimensions for mobile, if necessary */
+      padding: 20px;
+    }
+    .text-container {
+      font-size: 1.2rem; /* Reduce font-size for readability on small screens */
+      line-height: 1.4;
+    }
+    /* Adjust positioning or layout for mobile */
+  }

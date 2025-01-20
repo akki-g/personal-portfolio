@@ -10,7 +10,13 @@ function About() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        axios.get('https://api.its-akki.com/api/get_images/')
+        const token = import.meta.env.REACT_APP_API_TOKEN;
+
+        // Set up the headers with the Authorization token
+        const headers = {
+            Authorization: `Bearer ${token}`,
+        };
+        axios.get('https://api.its-akki.com/api/get_images/', { headers })
           .then(response => {
             const data = response.data;
             setImages({
