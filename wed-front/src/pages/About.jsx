@@ -10,7 +10,7 @@ function About() {
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);
     useEffect(() => {
-        axios.get('http://localhost:8000/api/get_images/')
+        axios.get('https://api.its-akki.com/api/get_images/')
           .then(response => {
             const data = response.data;
             setImages({

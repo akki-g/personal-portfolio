@@ -63,6 +63,9 @@ CORS_ALLOWED_ORIGINS = [
     'https://www.its-akki.com'
 ]   
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+SECURE_SSL_REDIRECT = True
+
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',

@@ -7,7 +7,7 @@ function Home() {
     const [projects, setProjects] = useState([]);  
     const [resume, setResume] = useState(null);
     useEffect(() => {
-        axios.get('http://localhost:8000/api/projects')
+        axios.get('https://api.its-akki.com/api/projects')
         .then(response => {
             setProjects(response.data);
         })
@@ -17,7 +17,7 @@ function Home() {
     }, []);
 
     useEffect(() => {
-        axios.get('http://localhost:8000/api/download-resume', {
+        axios.get('https://api.its-akki.com/api/download-resume', {
             responseType: 'blob'
         })
         .then(response => {

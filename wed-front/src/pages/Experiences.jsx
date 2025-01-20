@@ -8,7 +8,7 @@ function Experiences() {
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
-      axios.get('http://localhost:8000/api/experiences')
+      axios.get('https://api.its-akki.com/api/experiences')
       .then(response => {
         setExperiences(response.data);
       })
