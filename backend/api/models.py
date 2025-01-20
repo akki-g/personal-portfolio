@@ -1,6 +1,5 @@
 from django.db import models
 from django.db.models import JSONField
-from ckeditor.fields import RichTextField
 import os
 
 # Create your models here.
