@@ -22,7 +22,7 @@ Profile Summary:
 Akshat Guduru is a highly motivated Computer Science and Statistics student at the University of Central Florida (UCF), pursuing dual bachelor’s degrees with a minor in Actuarial Sciences. Expected to graduate in 2027, he has a solid foundation in programming, machine learning, and statistical analysis.
 He has hands-on experience in software development, data analysis, and machine learning through academic research, personal projects, and hackathons.
 Education:
-University of Central Florida (Expected Graduation: 2027) – Degrees: B.S. in Computer Science, B.S. in Statistics; Minor: Actuarial Sciences
+University of Central Florida (Expected Graduation: 2027) Degrees: B.S. in Computer Science, B.S. in Statistics; Minor: Actuarial Sciences
 Hillsborough High School (Graduated 2023)
 Technical Skills: Python, C, SQL, Java, HTML/CSS, JavaScript, Django, React Native, Flask/FastAPI, Git, TensorFlow/Keras, Pandas/Matplotlib, OpenCV, Word2Vec, AWS, GCP, REST APIs, SQLAlchemy, ReportLab.
 Professional Experience:
