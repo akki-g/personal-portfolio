@@ -65,7 +65,7 @@
 }
 
 .projects-header {
-    margin-top: 6rem;
+    margin-top: 3rem;
     overflow: hidden;
     border-top: 2px solid var(--border-color);
     border-bottom: 2px solid var(--border-color);
@@ -113,7 +113,9 @@
     text-align: center;
     color: var(--text-color);
     overflow: hidden;
-    height: 500px;
+    min-height: 500px;
+    height: auto;
+    position: relative;
 }
 .project-entry h3 {
     font-family: var(--header-text-font);
@@ -233,4 +235,17 @@
   }
 .contact-links a:hover {
     text-transform: scale(1.5);    /* simple hover effect */
+  }
+
+  @media only screen and (max-width: 600px) {
+    .projects {
+      grid-template-columns: 1fr;
+    }
+    .hero {
+      margin-bottom: 0rem; /* Smaller space on mobile */
+    }
+    .hero-intro {
+      font-size: 5vw;  /* Larger text for improved visibility */
+      padding-left: 1rem; /* Reduce padding for a tighter layout */
+    }
   }
