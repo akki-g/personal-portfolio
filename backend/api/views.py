@@ -12,7 +12,11 @@ import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import os
+from pathlib import Path
+from dotenv import load_dotenv
 import json
+BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 # Create your views here.
 
 class ProjectListView(APIView):
@@ -83,12 +87,13 @@ def get_images(request):
         'image_3': domain + about.image3.url,
         'image_4': domain + about.image4.url
     })
-csrf_exempt
+@csrf_exempt
 def proxy_to_perplexity(request):
     if request.method == "POST":
+        api_key = os.getenv("PERLEX_TOKEN")
         api_url = "https://api.perplexity.ai/chat/completions"
         headers = {
-            "Authorization": f"Bearer {os.getenv('PERLEX_TOKEN')}",
+            "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
         }
         try:

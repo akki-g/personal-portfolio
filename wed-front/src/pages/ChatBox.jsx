@@ -56,7 +56,7 @@ Provide responses using this context and stay professional.
     };
 
     try {
-      const response = await apiClient.post('api/proxy_to_perplexity/', payload);
+      const response = await apiClient.post('proxy_to_perplexity/', payload);
       const botReply = response.data.choices[0].message.content;
       setMessages(prev => [...prev, { role: 'assistant', content: botReply }]);
     } catch (error) {
