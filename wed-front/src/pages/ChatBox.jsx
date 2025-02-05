@@ -98,13 +98,12 @@ function ChatBox() {
 
     try {
       const response = await axios.post(
-        'https://api.perplexity.ai/chat/completions',
+        "https://api.its-akki.com/api/proxy/perplexity/",
         payload,
         {
           headers: {
-            'Content-Type': 'application/json',
-            'Authorization': import.meta.env.VITE_PERLEX_TOKEN
-          }
+            "Content-Type": "application/json",
+          },
         }
       );
       

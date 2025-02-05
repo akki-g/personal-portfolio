@@ -8,7 +8,10 @@ from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 from .models import Project, Contact, About, Experience
 from .serializers import ProjectSerializer, ContactSerializer, AboutSerializer, ExperienceSerializer
-
+import requests
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+import os
 # Create your views here.
 
 class ProjectListView(APIView):
@@ -79,4 +82,18 @@ def get_images(request):
         'image_3': domain + about.image3.url,
         'image_4': domain + about.image4.url
     })
-       
+
+@csrf_exempt
+def proxy_to_perplexity(request):
+    if request.method == "POST":
+        api_url = "https://api.perplexity.ai/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {os.getenv('PERLEX_TOKEN')}",
+            "Content-Type": "application/json",
+        }
+        try:
+            response = requests.post(api_url, headers=headers, data=request.body)
+            return JsonResponse(response.json(), status=response.status_code)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=405)
