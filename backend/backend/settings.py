@@ -62,7 +62,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://localhost:5173",
     'https://its-akki.com',
     'https://www.its-akki.com',
-    'https://api.its-akki.com'
+    'https://api.its-akki.com',
+    'https://api.perplexity.ai'
 ]   
 
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
