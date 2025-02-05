@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 import './ChatBox.css'; // Create and import your styles accordingly
-
+import apiClient from './AxiosInstance';
 function ChatBox() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -99,22 +99,15 @@ function ChatBox() {
     };
 
     try {
-      const response = await axios.post(
-        "https://api.its-akki.com/api/proxy/perplexity/",
-        payload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      
-      // Assuming the response returns a message in a similar format to OpenAI's responses.
+      const response = await apiClient.post('proxy_to_perplexity/', payload);
       const botReply = response.data.choices[0].message.content;
-      setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: botReply }]);
+      setMessages(prev => [...prev, { role: 'assistant', content: botReply }]);
     } catch (error) {
       console.error("Error during API call:", error);
-      setMessages(prevMessages => [...prevMessages, { role: 'assistant', content: "Sorry, something went wrong." }]);
+      setMessages(prev => [
+        ...prev,
+        { role: 'assistant', content: "Sorry, something went wrong." },
+      ]);
     }
   };
 

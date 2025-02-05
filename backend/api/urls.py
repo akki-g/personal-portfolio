@@ -8,5 +8,5 @@ urlpatterns = [
     path('api/download-resume/', download_resume, name='download-resume'),
     path('api/get_images/', get_images, name='get_images'),
     path('api/experiences/', ExperiencesListView.as_view(), name='experiences-list'),
-    path('api/proxy_to_perplexity/', proxy_to_perplexity, name='proxy_to_perplexity'),
+    path('api/proxy_to_perplexity/', proxy_to_perplexity, name='proxy_to_perplexity')
 ]
