@@ -32,7 +32,7 @@ function Experiences() {
             }`}
             onClick={() => setActiveIndex(index)}
           >
-            {exp.title}
+            {exp.role}
           </div>
         ))}
       </div>
@@ -41,7 +41,7 @@ function Experiences() {
       {activeExperience ? (
         <div className="experience-detail">
           <h3>
-            {activeExperience.role} - {activeExperience.company}
+            {activeExperience.company}
           </h3>
           <p>
             {activeExperience.start_mthyr} - {activeExperience.end_mthyr}

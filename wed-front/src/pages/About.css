@@ -33,7 +33,7 @@
 }
 .intro-1, .intro-2, .intro-3 span{
   font-weight: 100;
-  font-size: 15rem;
+  font-size: 13rem;
 }
 .about-intro-text .intro-1 span {
   font-family: var(--header-text-font);
@@ -53,6 +53,7 @@
   font-stretch: narrower;
   padding-left: 0px;
   margin-left: 5vw;
+  padding-left: 20px;
 }
 .about-intro-text .intro-3 span {
   font-family: var(--header-text-font);

@@ -5,8 +5,9 @@
     align-items: center;
 
     font-family: var(--header-text-font);
-    margin-left: 20vw;
+    margin-left: 10vw;
     margin-right: 10vw;
+    padding-bottom: 5vw;
   }
 .experiences-container h2 {
     font-size: 2.5em;
