@@ -12,6 +12,7 @@ import requests
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 import os
+import json
 # Create your views here.
 
 class ProjectListView(APIView):
@@ -92,7 +93,8 @@ def proxy_to_perplexity(request):
             "Content-Type": "application/json",
         }
         try:
-            response = requests.post(api_url, headers=headers, data=request.body)
+            payload = json.load(request.body)
+            response = requests.post(api_url, headers=headers, json=payload)
             return JsonResponse(response.json(), status=response.status_code)
         except Exception as e:
             return JsonResponse({"error": str(e)}, status=500)
