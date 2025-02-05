@@ -83,8 +83,7 @@ def get_images(request):
         'image_3': domain + about.image3.url,
         'image_4': domain + about.image4.url
     })
-
-@csrf_exempt
+csrf_exempt
 def proxy_to_perplexity(request):
     if request.method == "POST":
         api_url = "https://api.perplexity.ai/chat/completions"
@@ -93,9 +92,13 @@ def proxy_to_perplexity(request):
             "Content-Type": "application/json",
         }
         try:
-            payload = json.load(request.body)
+            payload = json.loads(request.body.decode('utf-8'))
             response = requests.post(api_url, headers=headers, json=payload)
             return JsonResponse(response.json(), status=response.status_code)
+        except json.JSONDecodeError as e:
+            return JsonResponse({"error": "Invalid JSON payload", "details": str(e)}, status=400)
+        except requests.RequestException as e:
+            return JsonResponse({"error": "Error communicating with Perplexity API", "details": str(e)}, status=502)
         except Exception as e:
-            return JsonResponse({"error": str(e)}, status=500)
+            return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request method"}, status=405)
