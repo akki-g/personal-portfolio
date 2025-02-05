@@ -5,6 +5,7 @@ import axios from 'axios';
 import './Experiences';
 import apiClient from './AxiosInstance';
 import Experiences from './Experiences';
+import ChatBox from './ChatBox';
 
 function About() {
     const [images, setImages] = useState({ image_1: '', image_2: '', image_3: '' });
@@ -96,6 +97,9 @@ function About() {
                     <div className="right-column">
                         <Experiences />
                     </div>
+                </section>
+                <section className="chatbox-section">
+                    <ChatBox />
                 </section>
             </div>
         </main>
