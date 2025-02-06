@@ -1,9 +1,14 @@
 :root {
   --bg-color: #fde7c6;
+  --secbg-color: #fde7c6;
   --text-color: #301605;
   --border-color: #1a1a1a;
   --toggle-bg: #fde7c6;
   --git-hub-url: url('/images/github-mark.png');
+  --primary-color: #ffffff;
+  --secondary-color: #b7b7b7;
+  --secborder-color: #000000;
+  --sectext-color: #000000;
 }
 
 ::-webkit-scrollbar {
@@ -44,11 +49,16 @@ html, body {
 }
 
 body[data-theme="dark"] {
+  --secbg-color: #626262;
   --bg-color: #1a1a1a;
   --text-color: #fdf8f4;
   --border-color: #fdf8f4;
   --toggle-bg: #1a1a1a;
+  --primary-color: #3c3c3c;
+  --secondary-color: #000000;
   --git-hub-url: url('/images/github-mark-white.png');
+  --secborder-color: #ffffff;
+  --sectext-color: #ffffff;
 }
 
 h1 {
