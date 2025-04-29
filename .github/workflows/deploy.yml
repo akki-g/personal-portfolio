@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   deploy:
@@ -23,9 +24,15 @@ jobs:
           mkdir -p ~/.ssh
           ssh-keyscan -H 52.45.7.233 >> ~/.ssh/known_hosts
 
+      - name: Test SSH Connection
+        run: ssh -v ubuntu@52.45.7.233 "echo Connection successful"
+
       - name: Deploy to EC2
+        if: success()
         run: |
-          ssh ubuntu@52.45.7.233 <<EOF
+          ssh ubuntu@52.204.158.12 <<EOF
+            set -e
+            echo "Starting deployment..."
             cd /home/ubuntu/personal-portfolio
             git pull origin main
             cd backend
@@ -41,4 +48,5 @@ jobs:
             sudo systemctl daemon-reload
             sudo systemctl restart nginx
             sudo systemctl restart gunicorn
+            echo "Deployment completed successfully!"
           EOF
