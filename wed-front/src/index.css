@@ -1,22 +1,22 @@
 :root {
-  /* Light theme */
-  --bg-color: #fde7c6;
-  --secbg-color: #f8e0b9;
-  --text-color: #2a1403; /* Darker text for better contrast */
-  --border-color: #c0a978; /* More visible borders */
-  --toggle-bg: #fde7c6;
+  /* Light Theme */
+  --bg-color: #FFFFFF; /* Pure white background */
+  --secbg-color: #F5F5F5; /* Light gray secondary background */
+  --text-color: #1A1A1A; /* Near-black text for high readability */
+  --border-color: #CCCCCC; /* Light gray borders */
+  --toggle-bg: #E0E0E0; /* Toggle background */
   --git-hub-url: url('/images/github-mark.png');
-  --primary-color: #ffffff;
-  --secondary-color: #b7b7b7;
-  --secborder-color: #2a1403;
-  --sectext-color: #2a1403;
-  --accent-color: #9b4dca; /* New accent color for interactive elements */
-  --accent-color-hover: #7e3ca6;
-  --error-color: #d32f2f;
-  --success-color: #388e3c;
+  --primary-color: #FFFFFF; /* Primary elements */
+  --secondary-color: #E0E0E0; /* Secondary elements */
+  --secborder-color: #BDBDBD; /* Secondary border */
+  --sectext-color: #1A1A1A; /* Secondary text */
+  --accent-color: #6200EE; /* Deep purple accent */
+  --accent-color-hover: #3700B3; /* Darker purple on hover */
+  --error-color: #B00020; /* Error red */
+  --success-color: #018786; /* Success teal */
   /* Gradient colors */
-  --gradient-start: #eb7af9;
-  --gradient-end: #70d2ff;
+  --gradient-start: #BB86FC; /* Light purple */
+  --gradient-end: #03DAC6; /* Teal */
 }
 
 /* Scrollbar styling */
@@ -79,21 +79,24 @@ html, body {
 
 /* Dark theme with improved contrast */
 body[data-theme="dark"] {
-  --secbg-color: #2c2c2c;
-  --bg-color: #1a1a1a;
-  --text-color: #f0e6e0; /* Lighter text for better contrast on dark background */
-  --border-color: #484848; /* More visible borders in dark mode */
-  --toggle-bg: #1a1a1a;
-  --primary-color: #3c3c3c;
-  --secondary-color: #000000;
+  /* Dark Theme */
+  --bg-color: #121212; /* Dark gray background */
+  --secbg-color: #1E1E1E; /* Slightly lighter secondary background */
+  --text-color: #E0E0E0; /* Light gray text for readability */
+  --border-color: #333333; /* Dark gray borders */
+  --toggle-bg: #2C2C2C; /* Toggle background */
+  --primary-color: #1E1E1E; /* Primary elements */
+  --secondary-color: #2C2C2C; /* Secondary elements */
   --git-hub-url: url('/images/github-mark-white.png');
-  --secborder-color: #f0e6e0;
-  --sectext-color: #f0e6e0;
-  --accent-color: #b56fdd; /* Lighter accent color for better visibility */
-  --accent-color-hover: #c78ae4;
+  --secborder-color: #444444; /* Secondary border */
+  --sectext-color: #E0E0E0; /* Secondary text */
+  --accent-color: #BB86FC; /* Light purple accent */
+  --accent-color-hover: #3700B3; /* Darker purple on hover */
+  --error-color: #CF6679; /* Error red */
+  --success-color: #03DAC6; /* Success teal */
   /* Gradient colors adjusted for dark mode */
-  --gradient-start: #eb7af9;
-  --gradient-end: #70d2ff;
+  --gradient-start: #BB86FC; /* Light purple */
+  --gradient-end: #03DAC6; /* Teal */
 }
 
 h1, h2, h3, h4, h5, h6 {
