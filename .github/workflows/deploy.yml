@@ -22,10 +22,10 @@ jobs:
       - name: Add Host to Known Hosts
         run: |
           mkdir -p ~/.ssh
-          ssh-keyscan -H 52.45.7.233 >> ~/.ssh/known_hosts
+          ssh-keyscan -H 52.204.158.12 >> ~/.ssh/known_hosts
 
       - name: Test SSH Connection
-        run: ssh -v ubuntu@52.45.7.233 "echo Connection successful"
+        run: ssh -v ubuntu@52.204.158.12 "echo Connection successful"
 
       - name: Deploy to EC2
         if: success()
