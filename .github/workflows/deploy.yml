@@ -13,16 +13,19 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup SSH Key
+      - name: Install SSH key
+        uses: webfactory/ssh-agent@v0.7.0
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
+      - name: Add Host to Known Hosts
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
-          eval "$(ssh-agent -s)"
-          ssh-add private_key
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 52.45.7.233 >> ~/.ssh/known_hosts
 
       - name: Deploy to EC2
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@52.204.158.12 <<EOF
+          ssh ubuntu@52.45.7.233 <<EOF
             cd /home/ubuntu/personal-portfolio
             git pull origin main
             cd backend
