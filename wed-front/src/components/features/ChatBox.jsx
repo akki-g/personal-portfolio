@@ -33,10 +33,10 @@ const ChatBox = () => {
       About Akshat Guduru:
       Education:
       
-      University of Central Florida (UCF) | Dual major in Computer Science & Statistics (Minor: Actuarial Sciences) | Class of 2027
-      Relevant coursework: Machine Learning, Algorithms, Software Development, Calculus 2 & 3, Probability & Statistics, Data Structures
+      University of Central Florida (UCF) | Dual major in Computer Science & Statistics (Minor: Math) | Class of 2027
+      Relevant coursework: Machine Learning, Software Development, Calculus 2 & 3, Probability & Statistics, Data Structures and Algorithms, Numerical Calculus, Computer Logic and Organization, Systems Software,
+      Processes of Object Oriented Software, Linear Algebra, Ordinary Differential Equations, Optimization, Artifitial Intelligence 
       Technical Skills:
-      
       Programming: Python, C, C++, SQL, Java, JavaScript, HTML/CSS
       Frameworks & Libraries: Django, Flask, FastAPI, React, React Native
       Machine Learning & AI: TensorFlow/Keras, Scikit-learn, Pandas, NumPy, OpenCV, PyTorch, PettingZoo
