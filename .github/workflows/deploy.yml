@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # Allows manual triggering
 
 jobs:
   deploy:
@@ -14,27 +13,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Setup SSH key
+      - name: Setup SSH Key
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key
+          chmod 600 private_key
           eval "$(ssh-agent -s)"
-          ssh-add ~/.ssh/id_ed25519
-
-      - name: Add Host to Known Hosts
-        run: |
-          ssh-keyscan -H 52.204.158.12 >> ~/.ssh/known_hosts
-
-      - name: Test SSH Connection
-        run: ssh -v -i ~/.ssh/id_ed25519 ubuntu@52.204.158.12 "echo Connection successful"
+          ssh-add private_key
 
       - name: Deploy to EC2
-        if: success()
         run: |
-          ssh -i ~/.ssh/id_ed25519 ubuntu@52.204.158.12 <<EOF
-            set -e
-            echo "Starting deployment..."
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@52.204.158.12 <<EOF
             cd /home/ubuntu/personal-portfolio
             git pull origin main
             cd backend
@@ -43,12 +31,11 @@ jobs:
             cd ../wed-front
             npm install
             npm run build
-            sudo rm -rf /var/www/vhosts/frontend*
-            sudo cp -r dist/* /var/www/vhosts/frontend
-            sudo chown -R www-data:www-data /var/www/html
-            sudo chmod -R 755 /var/www/html
+            sudo rm -rf /var/www/vhosts/frontend/*
+            sudo cp -r dist/* /var/www/vhosts/frontend/
+            sudo chown -R www-data:www-data /var/www/vhosts/frontend/
+            sudo chmod -R 755 /var/www/vhosts/frontend/
             sudo systemctl daemon-reload
             sudo systemctl restart nginx
             sudo systemctl restart gunicorn
-            echo "Deployment completed successfully!"
           EOF
