@@ -1,7 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import './About.css';
-import axios from 'axios';
 import './Experiences';
 import apiClient from './AxiosInstance';
 import Experiences from './Experiences';

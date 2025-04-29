@@ -1,0 +1,41 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Setup SSH Key
+        run: |
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key
+          chmod 600 private_key
+          eval "$(ssh-agent -s)"
+          ssh-add private_key
+
+      - name: Deploy to EC2
+        run: |
+          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@52.45.7.233 <<EOF
+            cd /home/ubuntu/personal-portfolio
+            git pull origin main
+            cd backend
+            source webenv/bin/activate
+            pip install -r req.txt
+            cd ../wed-front
+            npm install
+            npm run build
+            sudo rm -rf /var/www/vhosts/frontend*
+            sudo cp -r dist/* /var/www/vhosts/frontend
+            sudo chown -R www-data:www-data /var/www/html
+            sudo chmod -R 755 /var/www/html
+            sudo systemctl daemon-reload
+            sudo systemctl restart nginx
+            sudo systemctl restart gunicorn
+          EOF
