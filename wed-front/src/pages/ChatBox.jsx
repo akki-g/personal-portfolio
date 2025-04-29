@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import axios from 'axios';
-import './ChatBox.css'; // Create and import your styles accordingly
 import apiClient from './AxiosInstance';
+import './ChatBox.css';
+
 function ChatBox() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   // This function sends the user's message and incorporates additional context.
   const handleSend = async () => {
@@ -15,6 +16,7 @@ function ChatBox() {
     const updatedMessages = [...messages, newMessage];
     setMessages(updatedMessages);
     setInput('');
+    setIsLoading(true);
     
     // Define a system message that provides context (including resume/experience info)
     const systemContext = `
@@ -59,10 +61,10 @@ Archery → Practices at home and on the family farm.
 Powerlifting → Competed in competitions, setting state & national records in weight class.
 Cooking → Loves experimenting with healthy recipes for friends & family, enjoys making food from scratch.
 `;
-    // Create payload with context (you can add more details or links if needed)
+
+    // Create payload for OpenAI API
     const payload = {
-      model: "sonar", // or another supported model
-      stream: false,
+      model: "gpt-4o", // OpenAI's GPT-4o model
       max_tokens: 1024,
       frequency_penalty: 1,
       temperature: 0.5,
@@ -73,8 +75,13 @@ Cooking → Loves experimenting with healthy recipes for friends & family, enjoy
     };
 
     try {
-      const response = await apiClient.post('proxy_to_perplexity/', payload);
+      // Use the same proxy endpoint, but we'll assume the backend will be updated
+      // to forward requests to OpenAI instead of Perplexity
+      const response = await apiClient.post('proxy_to_openai/', payload);
+      
+      // Parse the response based on OpenAI's response format
       const botReply = response.data.choices[0].message.content;
+      
       setMessages(prev => [...prev, { role: 'assistant', content: botReply }]);
     } catch (error) {
       console.error("Error during API call:", error);
@@ -82,6 +89,15 @@ Cooking → Loves experimenting with healthy recipes for friends & family, enjoy
         ...prev,
         { role: 'assistant', content: "Sorry, something went wrong." },
       ]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Handle Enter key press
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter') {
+      handleSend();
     }
   };
 
@@ -94,6 +110,11 @@ Cooking → Loves experimenting with healthy recipes for friends & family, enjoy
             {msg.content}
           </div>
         ))}
+        {isLoading && (
+          <div className="chat-message assistant loading">
+            <span className="loading-dots">...</span>
+          </div>
+        )}
       </div>
       <div className="chatbox-input">
         <input
@@ -101,8 +122,12 @@ Cooking → Loves experimenting with healthy recipes for friends & family, enjoy
           value={input}
           placeholder="Type your message..."
           onChange={e => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
+          disabled={isLoading}
         />
-        <button onClick={handleSend}>Send</button>
+        <button onClick={handleSend} disabled={isLoading}>
+          {isLoading ? 'Sending...' : 'Send'}
+        </button>
       </div>
     </div>
   );

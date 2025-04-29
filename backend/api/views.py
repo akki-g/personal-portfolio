@@ -88,10 +88,10 @@ def get_images(request):
         'image_4': domain + about.image4.url
     })
 @csrf_exempt
-def proxy_to_perplexity(request):
+def proxy_to_openai(request):
     if request.method == "POST":
-        api_key = os.getenv("PERLEX_TOKEN")
-        api_url = "https://api.perplexity.ai/chat/completions"
+        api_key = os.getenv("OPENAI_API_KEY")  # You'll need to add this to your .env file
+        api_url = "https://api.openai.com/v1/chat/completions"
         headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
@@ -103,7 +103,7 @@ def proxy_to_perplexity(request):
         except json.JSONDecodeError as e:
             return JsonResponse({"error": "Invalid JSON payload", "details": str(e)}, status=400)
         except requests.RequestException as e:
-            return JsonResponse({"error": "Error communicating with Perplexity API", "details": str(e)}, status=502)
+            return JsonResponse({"error": "Error communicating with OpenAI API", "details": str(e)}, status=502)
         except Exception as e:
             return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
     return JsonResponse({"error": "Invalid request method"}, status=405)
