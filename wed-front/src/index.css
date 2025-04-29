@@ -1,18 +1,38 @@
 :root {
+  /* Light theme */
   --bg-color: #fde7c6;
-  --secbg-color: #fde7c6;
-  --text-color: #301605;
-  --border-color: #1a1a1a;
+  --secbg-color: #f8e0b9;
+  --text-color: #2a1403; /* Darker text for better contrast */
+  --border-color: #c0a978; /* More visible borders */
   --toggle-bg: #fde7c6;
   --git-hub-url: url('/images/github-mark.png');
   --primary-color: #ffffff;
   --secondary-color: #b7b7b7;
-  --secborder-color: #000000;
-  --sectext-color: #000000;
+  --secborder-color: #2a1403;
+  --sectext-color: #2a1403;
+  --accent-color: #9b4dca; /* New accent color for interactive elements */
+  --accent-color-hover: #7e3ca6;
+  --error-color: #d32f2f;
+  --success-color: #388e3c;
+  /* Gradient colors */
+  --gradient-start: #eb7af9;
+  --gradient-end: #70d2ff;
 }
 
+/* Scrollbar styling */
 ::-webkit-scrollbar {
-  display: none; 
+  width: 8px;
+  height: 8px;
+  background-color: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(0, 0, 0, 0.3);
 }
 
 * {
@@ -25,15 +45,23 @@ a {
   font-weight: 500;
   color: var(--text-color);
   text-decoration: none;
+  transition: color 0.2s ease;
+  position: relative;
 }
+
 a:hover {
-  color: var(--text-color);
+  color: var(--accent-color);
+}
+
+a:focus-visible {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
 main {
-  --header-text-font: Impact, 'Condensed', 'Arial Narrow', sans-serif;
-  --normal-text-font: 'Roboto', sans-serif;
-  transition: background-color 1s cubic-bezier(0.19, 1, 0.22, 1);
+  --header-text-font: Impact, 'Arial Black', 'Arial Narrow', sans-serif;
+  --normal-text-font: 'Roboto', system-ui, -apple-system, sans-serif;
+  transition: background-color 0.5s cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 html, body {
@@ -43,27 +71,39 @@ html, body {
   height: 100%;
   background-color: var(--bg-color);
   scroll-behavior: smooth;
-  scrollbar-width: none;
-  transition: background-color 1s cubic-bezier(0.19, 1, 0.22, 1);
   overflow: auto;
+  transition: background-color 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+  font-size: 16px;
+  line-height: 1.5;
 }
 
+/* Dark theme with improved contrast */
 body[data-theme="dark"] {
-  --secbg-color: #626262;
+  --secbg-color: #2c2c2c;
   --bg-color: #1a1a1a;
-  --text-color: #fdf8f4;
-  --border-color: #fdf8f4;
+  --text-color: #f0e6e0; /* Lighter text for better contrast on dark background */
+  --border-color: #484848; /* More visible borders in dark mode */
   --toggle-bg: #1a1a1a;
   --primary-color: #3c3c3c;
   --secondary-color: #000000;
   --git-hub-url: url('/images/github-mark-white.png');
-  --secborder-color: #ffffff;
-  --sectext-color: #ffffff;
+  --secborder-color: #f0e6e0;
+  --sectext-color: #f0e6e0;
+  --accent-color: #b56fdd; /* Lighter accent color for better visibility */
+  --accent-color-hover: #c78ae4;
+  /* Gradient colors adjusted for dark mode */
+  --gradient-start: #eb7af9;
+  --gradient-end: #70d2ff;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  line-height: 1.2;
+  color: var(--text-color);
+  font-family: var(--header-text-font);
 }
 
 h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
+  font-size: clamp(2rem, 8vw, 3.2rem);
 }
 
 button {
@@ -73,25 +113,56 @@ button {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #1a1a1a;
+  background-color: var(--accent-color);
+  color: white;
   cursor: pointer;
-  transition: border-color 0.25s;
+  transition: all 0.2s ease;
+}
+
+button:hover {
+  background-color: var(--accent-color-hover);
+  transform: translateY(-2px);
 }
 
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
 }
 
-@media (prefers-color-scheme: light) {
-  :root {
-    color: var(--text-color);
-    background-color: var(--bg-color);
+/* Skip to content link for accessibility */
+.skip-to-content {
+  position: absolute;
+  left: 0;
+  top: -40px;
+  z-index: 1000;
+  background: var(--accent-color);
+  color: white;
+  padding: 8px 16px;
+  transition: top 0.3s;
+}
+
+.skip-to-content:focus {
+  top: 0;
+}
+
+/* Accessibility focus styles */
+:focus {
+  outline: 2px solid var(--accent-color);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
-  a:hover {
-    color: var(--text-color);
-  }
-  button {
-    background-color: var(--bg-color);
+}
+
+@media (max-width: 768px) {
+  html, body {
+    font-size: 14px;
   }
 }
