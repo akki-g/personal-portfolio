@@ -64,7 +64,7 @@ Cooking → Loves experimenting with healthy recipes for friends & family, enjoy
 
     // Create payload for OpenAI API
     const payload = {
-      model: "gpt-4o", // OpenAI's GPT-4o model
+      model: "gpt-4.1", // OpenAI's GPT-4.1 model
       max_tokens: 1024,
       frequency_penalty: 1,
       temperature: 0.5,
