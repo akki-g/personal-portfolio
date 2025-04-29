@@ -14,23 +14,25 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v3
 
-      - name: Install SSH key
-        uses: webfactory/ssh-agent@v0.7.0
-        with:
-          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY_BASE64 }}" | base64 -d > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          eval "$(ssh-agent -s)"
+          ssh-add ~/.ssh/id_ed25519
 
       - name: Add Host to Known Hosts
         run: |
-          mkdir -p ~/.ssh
           ssh-keyscan -H 52.204.158.12 >> ~/.ssh/known_hosts
 
       - name: Test SSH Connection
-        run: ssh -v ubuntu@52.204.158.12 "echo Connection successful"
+        run: ssh -v -i ~/.ssh/id_ed25519 ubuntu@52.204.158.12 "echo Connection successful"
 
       - name: Deploy to EC2
         if: success()
         run: |
-          ssh ubuntu@52.204.158.12 <<EOF
+          ssh -i ~/.ssh/id_ed25519 ubuntu@52.204.158.12 <<EOF
             set -e
             echo "Starting deployment..."
             cd /home/ubuntu/personal-portfolio
@@ -50,6 +52,3 @@ jobs:
             sudo systemctl restart gunicorn
             echo "Deployment completed successfully!"
           EOF
-
-
-          
