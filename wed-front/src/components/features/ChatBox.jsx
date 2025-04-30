@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import apiClient from '../../pages/AxiosInstance';
 import './ChatBox.css';
 
@@ -9,6 +9,17 @@ const ChatBox = () => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+  
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
 
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -20,8 +31,14 @@ const ChatBox = () => {
     setInput('');
     setIsLoading(true);
     
+    // Focus input after sending message
+    setTimeout(() => {
+      inputRef.current?.focus();
+    }, 100);
+    
     // System context for the AI
     const systemContext = `
+      You are a conversational chatbox for Akshat Guduru's personal portfolio
       Chatbot Behavior:
       Respond as Akshat Guduru, answering naturally and to the point—no unnecessary fluff.
       Don't respond with information that Akshat wouldn't know or provide. Just act as if you are having a conversation with someone as Akshat.
@@ -30,6 +47,7 @@ const ChatBox = () => {
       Do not act like a general chatbot or assistant—conversations should feel like Akshat himself is responding.
       Greet users occasionally when appropriate and when greeted.
       Do not use special formatting, answer in plain text and full sentences.
+      Do not be chat gpt and handle regular querys
       About Akshat Guduru:
       Education:
       
@@ -84,7 +102,7 @@ const ChatBox = () => {
       console.error("Error during API call:", error);
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: "Sorry, something went wrong." },
+        { role: 'assistant', content: "Sorry, something went wrong. Please try again later." },
       ]);
     } finally {
       setIsLoading(false);
@@ -93,38 +111,89 @@ const ChatBox = () => {
 
   // Handle Enter key press
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter') {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault(); // Prevent newline in input
       handleSend();
     }
   };
 
+  // Format message text with paragraph breaks
+  const formatMessage = (text) => {
+    return text.split('\n').map((paragraph, index) => (
+      paragraph ? <p key={index}>{paragraph}</p> : <br key={index} />
+    ));
+  };
+
   return (
     <div className="chatbox-container">
-      <h2>Chat with me</h2>
-      <div className="chatbox-messages">
-        {messages.map((msg, index) => (
-          <div key={index} className={`chat-message ${msg.role}`}>
-            {msg.content}
+      <div className="chatbox-header">
+        <h2>Chat with me</h2>
+        <div className="chatbox-status">
+          {isLoading ? 'Typing...' : 'Online'}
+          <span className={`status-indicator ${isLoading ? 'typing' : 'online'}`}></span>
+        </div>
+      </div>
+      
+      <div className="chatbox-messages" aria-live="polite">
+        {messages.length === 0 ? (
+          <div className="chat-empty-state">
+            <div className="empty-icon">💬</div>
+            <p>Ask me anything about my projects, skills, or interests!</p>
           </div>
-        ))}
+        ) : (
+          messages.map((msg, index) => (
+            <div 
+              key={index} 
+              className={`chat-message ${msg.role}`}
+              aria-label={`${msg.role === 'user' ? 'You' : 'Akshat'} said`}
+            >
+              <div className="message-content">
+                {formatMessage(msg.content)}
+              </div>
+              <div className="message-timestamp">
+                {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}
+              </div>
+            </div>
+          ))
+        )}
+        
         {isLoading && (
           <div className="chat-message assistant loading">
-            <span className="loading-dots">...</span>
+            <div className="typing-indicator">
+              <span></span>
+              <span></span>
+              <span></span>
+            </div>
           </div>
         )}
+        <div ref={messagesEndRef} />
       </div>
-      <div className="chatbox-input">
-        <input
-          type="text"
+      
+      <div className="chatbox-input-container">
+        <textarea
+          ref={inputRef}
           value={input}
           placeholder="Type your message..."
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
+          rows={1}
+          autoFocus
         />
-        <button onClick={handleSend} disabled={isLoading}>
-          {isLoading ? 'Sending...' : 'Send'}
+        <button 
+          onClick={handleSend} 
+          disabled={isLoading || !input.trim()}
+          aria-label="Send message"
+        >
+          <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
         </button>
+      </div>
+      
+      <div className="chatbox-footer">
+        <p>Powered by GPT-4.1</p>
       </div>
     </div>
   );

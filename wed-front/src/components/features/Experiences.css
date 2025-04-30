@@ -102,7 +102,6 @@
   right: 0;
   width: 60px;
   height: 60px;
-  background: linear-gradient(225deg, rgba(235, 122, 249, 0.1), rgba(112, 210, 255, 0.1));
   border-radius: 0 0 8px 0;
   opacity: 0.5;
 }
