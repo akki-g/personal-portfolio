@@ -86,6 +86,8 @@ const ChatBox = () => {
       • Ask about education, skills, projects, or experience.
       • Expect concise, on-point replies with no extra “fluff.”
       • The chatbot will only share information listed above.
+      • If you ask about something not in the context, it will respond with "I don't have that information."
+      • DO NOT RETURN RESPONSES IN MARKDOWN FORMAT. KEEP IT PLAIN TEXT.
     `;
 
     // API payload
