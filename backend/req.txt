@@ -5,3 +5,6 @@ Pillow
 gunicorn
 requests
 python-dotenv
+paramiko
+djangorestframework-simplejwt
+cryptography
