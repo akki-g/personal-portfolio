@@ -74,21 +74,32 @@ class ExperiencesListView(APIView):
         return Response(serializer.errors, status=400)
     
 def download_resume(request):
-    about = get_object_or_404(About, pk=1)
+    about = About.objects.first()
+    if not about or not about.resume:
+        return Response({'error': 'Resume not found'}, status=404)
 
     return FileResponse(about.resume, as_attachment=True, filename='AkshatGuduru_Resume.pdf')
 
 @api_view(['GET'])
 def get_images(request):
-    about = get_object_or_404(About, pk=1)
+    about = About.objects.first()
+    if not about:
+        return Response({'error': 'No About record found'}, status=404)
+    
     current_site = get_current_site(request)
     domain = f"{request.scheme}://{current_site.domain}"
-    return Response({
-        'image_1': domain + about.image1.url,
-        'image_2': domain + about.image2.url,
-        'image_3': domain + about.image3.url,
-        'image_4': domain + about.image4.url
-    })
+    
+    result = {}
+    if about.image1:
+        result['image_1'] = domain + about.image1.url
+    if about.image2:
+        result['image_2'] = domain + about.image2.url
+    if about.image3:
+        result['image_3'] = domain + about.image3.url
+    if about.image4:
+        result['image_4'] = domain + about.image4.url
+    
+    return Response(result)
 @csrf_exempt
 def proxy_to_openai(request):
     if request.method == "POST":
