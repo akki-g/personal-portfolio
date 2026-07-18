@@ -3,11 +3,14 @@ import apiLogger from '../utils/logger.js';
 
 const token = import.meta.env.VITE_API_TOKEN;
 
+// Configurable at build time (VITE_API_BASE_URL); defaults to production.
+const baseURL = import.meta.env.VITE_API_BASE_URL || 'https://api.its-akki.com/api/';
+
+// Only attach the auth header when a token is provided. Otherwise, DRF's
+// TokenAuthentication would 401 on a "Token undefined" header (e.g. in local dev).
 const apiClient = axios.create({
-  baseURL: 'https://api.its-akki.com/api/',
-  headers: {
-    Authorization: `Token ${token}`,
-  },
+  baseURL,
+  headers: token ? { Authorization: `Token ${token}` } : {},
 });
 
 // Request interceptor - log outgoing requests

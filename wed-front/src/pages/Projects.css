@@ -1,0 +1,118 @@
+.projects-hero {
+  padding-block: clamp(92px, 13vw, 170px) clamp(68px, 9vw, 110px);
+}
+
+.projects-hero h1 {
+  max-width: 980px;
+  margin: 1.2rem 0 clamp(50px, 8vw, 92px);
+  font-size: clamp(3.8rem, 9.5vw, 9rem);
+  font-weight: 570;
+  letter-spacing: -0.075em;
+}
+
+.projects-hero-bottom {
+  display: grid;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--border-strong);
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 2rem;
+}
+
+.projects-hero-bottom p {
+  max-width: 650px;
+  color: var(--text-muted);
+  font-size: clamp(1rem, 2vw, 1.15rem);
+}
+
+.projects-hero-bottom span {
+  color: var(--text-muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+}
+
+.projects-archive {
+  padding-bottom: clamp(90px, 12vw, 160px);
+}
+
+.project-filters {
+  display: flex;
+  margin-bottom: 2rem;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.project-filters > span {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 620;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.project-filters > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+}
+
+.project-filters button {
+  min-width: auto;
+  padding: 0.25rem 0;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  color: var(--text-muted);
+  background: transparent;
+  font-size: 0.72rem;
+  cursor: pointer;
+  transition: color 160ms ease, border-color 160ms ease, background-color 160ms ease;
+}
+
+.project-filters button:hover {
+  color: var(--text-color);
+  border-bottom-color: var(--border-strong);
+}
+
+.project-filters button.is-active {
+  color: var(--text-color);
+  border-bottom-color: var(--text-color);
+  background: transparent;
+}
+
+body[data-theme="dark"] .project-filters button.is-active {
+  color: var(--text-color);
+  border-bottom-color: var(--text-color);
+  background: transparent;
+}
+
+.projects-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.projects-overview-grid > :nth-child(3n + 1) {
+  grid-column: 1 / -1;
+}
+
+@media (max-width: 720px) {
+  .projects-hero h1 {
+    font-size: clamp(3.7rem, 18vw, 6rem);
+  }
+
+  .projects-hero-bottom,
+  .projects-overview-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .projects-overview-grid > :nth-child(3n + 1) {
+    grid-column: auto;
+  }
+
+  .project-filters {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}

@@ -17,8 +17,22 @@ import json
 import paramiko
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
+
+
+import anthropic
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
+
+# Configure the Claude (Anthropic) client once, after the .env file is loaded.
+# Built lazily so the app still boots even when the key is missing.
+ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
+anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
+
+# Haiku 4.5 chosen for cost: the system prompt (identity + live DB context) is
+# resent on every stateless request, so token price compounds fast on a higher tier.
+CHAT_MODEL = "claude-haiku-4-5"
+
 # Create your views here.
 
 class ProjectListView(APIView):
@@ -100,26 +114,112 @@ def get_images(request):
         result['image_4'] = domain + about.image4.url
     
     return Response(result)
+
+
+def _format_projects_context():
+    projects = Project.objects.all().order_by('-id')
+    if not projects:
+        return ""
+    lines = ["Projects (live from the database):"]
+    for project in projects:
+        links = []
+        if project.repo_link:
+            links.append(f"repo: {project.repo_link}")
+        if project.live_link:
+            links.append(f"live: {project.live_link}")
+        link_text = f" ({', '.join(links)})" if links else ""
+        lines.append(
+            f"- {project.title} [{project.monthyr}]: {project.short_desc} "
+            f"Technologies: {project.technologies}.{link_text}"
+        )
+    return "\n".join(lines)
+
+
+def _format_experience_context():
+    experiences = Experience.objects.all().order_by('-id')
+    if not experiences:
+        return ""
+    lines = ["Experience (live from the database):"]
+    for experience in experiences:
+        lines.append(
+            f"- {experience.title}: {experience.role} at {experience.company} "
+            f"({experience.start_mthyr} to {experience.end_mthyr}): {experience.description}"
+        )
+    return "\n".join(lines)
+
+
+def build_profile_context():
+    """Fresh project/experience facts pulled from the DB, appended to the chat system prompt."""
+    blocks = [_format_projects_context(), _format_experience_context()]
+    return "\n\n".join(block for block in blocks if block)
+
+
 @csrf_exempt
 def proxy_to_openai(request):
-    if request.method == "POST":
-        api_key = os.getenv("OPENAI_API_KEY")  # You'll need to add this to your .env file
-        api_url = "https://api.openai.com/v1/chat/completions"
-        headers = {
-            "Authorization": f"Bearer {api_key}",
-            "Content-Type": "application/json",
-        }
-        try:
-            payload = json.loads(request.body.decode('utf-8'))
-            response = requests.post(api_url, headers=headers, json=payload)
-            return JsonResponse(response.json(), status=response.status_code)
-        except json.JSONDecodeError as e:
-            return JsonResponse({"error": "Invalid JSON payload", "details": str(e)}, status=400)
-        except requests.RequestException as e:
-            return JsonResponse({"error": "Error communicating with OpenAI API", "details": str(e)}, status=502)
-        except Exception as e:
-            return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
-    return JsonResponse({"error": "Invalid request method"}, status=405)
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=405)
+
+    if anthropic_client is None:
+        return JsonResponse(
+            {"error": "Chat is not configured", "details": "ANTHROPIC_API_KEY is not set on the server"},
+            status=503,
+        )
+
+    try:
+        payload = json.loads(request.body.decode('utf-8'))
+        messages = payload.get("messages", [])
+
+        # Claude takes the system prompt as a top-level argument and the
+        # conversation history as user/assistant turns only, so split the
+        # incoming OpenAI-style messages accordingly.
+        system_prompt = None
+        chat_messages = []
+        for msg in messages:
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role == "system":
+                system_prompt = content
+            elif role in ("user", "assistant"):
+                chat_messages.append({"role": role, "content": content})
+
+        # Append live project/experience facts from the DB so the bot never
+        # relies on a hand-maintained, easily-stale copy in the frontend.
+        profile_context = build_profile_context()
+        if profile_context:
+            system_prompt = f"{system_prompt}\n\n{profile_context}" if system_prompt else profile_context
+
+        response = anthropic_client.messages.create(
+            model=CHAT_MODEL,
+            max_tokens=1024,
+            system=system_prompt,
+            # No-op below the model's ~4K-token cache floor today, but free to
+            # leave on: it starts paying off the moment the DB context grows past it.
+            cache_control={"type": "ephemeral"},
+            thinking={"type": "disabled"},  # snappy, concise replies for a chatbot
+            messages=chat_messages,
+        )
+
+        # Concatenate the text blocks of the response (ignoring any non-text blocks).
+        reply = "".join(block.text for block in response.content if block.type == "text")
+
+        # Return an OpenAI-compatible response so the frontend needs no changes.
+        return JsonResponse({
+            "choices": [{
+                "message": {
+                    "role": "assistant",
+                    "content": reply,
+                },
+                "finish_reason": "stop",
+                "index": 0,
+            }],
+            "model": response.model,
+        })
+    except json.JSONDecodeError as e:
+        return JsonResponse({"error": "Invalid JSON payload", "details": str(e)}, status=400)
+    except anthropic.APIStatusError as e:
+        return JsonResponse({"error": "Chat provider error", "details": e.message}, status=502)
+    except Exception as e:
+        return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
 
 # Remote Access Views with Security
 BLACKLISTED_COMMANDS = [

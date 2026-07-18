@@ -1,0 +1,14 @@
+# Virtualenv and Python caches
+webenv/
+__pycache__/
+*.py[cod]
+
+# These files are provided at runtime through volumes or env_file.
+.env
+db.sqlite3
+media/
+static/
+
+# Misc
+.DS_Store
+*.log

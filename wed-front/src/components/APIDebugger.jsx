@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+/* eslint-disable react/prop-types */
+import { useState, useEffect } from 'react';
 import apiLogger from '../utils/logger.js';
 import './APIDebugger.css';
 

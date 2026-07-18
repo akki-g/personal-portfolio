@@ -11,6 +11,10 @@ const ChatBox = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, isLoading]);
   
   const handleSend = async () => {
     if (!input.trim()) return;
@@ -49,43 +53,14 @@ const ChatBox = () => {
       • Embedded & IoT: Raspberry Pi, Arduino, MQTT, CC1101 RF Transceivers, Servo Motors
       • DevOps & Security: VPN setup, SSH, basic penetration testing
 
-      Key Projects:
-
-      Portfolio Website
-      • Django backend + React/JSX frontend; dynamic showcase, contact form, SEO/performance-optimized, responsive design; APIs via Django REST Framework; navigation with React Router
-
-      Trading Strategy Algorithm
-      • Python + yfinance; SMAs, EMAs, MACD, RSI, Bollinger Bands; feature engineering + GMM clustering; Matplotlib visualizations; Random Forest + GMM forecasting; 25% return on CRWD
-
-      Smart Home Assistant
-      • Raspberry Pi + Python; facial-recognition door unlock (TensorFlow, OpenCV); RF-based lighting control; MQTT music playback; VPN for privacy; ArduCam, servos, Flask
-
-      Embeddings Data Pipeline
-      • FastAPI for OpenAI embeddings; PostgreSQL + SQLAlchemy async; Alembic migrations; Pydantic validation; roadmap to RAG agent
-
-      Compiler for Pseudocode
-      • Full C compiler: lexing, parsing, semantic analysis, code gen; modular design; comprehensive error handling
-
-      ShellHacks Hackaton Project • Anatomy Ant
-      • Flask backend on Google E2; OpenAI-powered chapter summaries + quizzes; JSON API for React Native frontend; fine-tuned GPT-4 model
-
-      Real Estate Market Reports Generator
-      • Python + Stellar MLS; pandas data processing; Matplotlib charts; ReportLab PDF reports; customizable by location/type/date
-
-      Neural Network from Scratch
-      • C++ feedforward NN; modular layers and activations; forward/backprop with gradient descent; metrics (accuracy, precision, recall, F1); API for training and inference
-
-      Syllab.AI
-      • Tech lead on edu platform; Node.js/Express + MongoDB + AWS EC2; React & TypeScript frontend; PDF→chapter summaries/quizzes; contextual AI tutor (OpenAI + RAG)
-
-      Research & Experience:
-      MARL Research Assistant, UCF (Nov 2024•Present)
-      • Multi-Agent Reinforcement Learning: policy evaluation, fault tolerance; PettingZoo simulations; metrics like Mean Squared Bellman Error.
+      Below this message, the server appends a live, up-to-date list of Akshat's
+      projects and experience pulled directly from the database. Treat that
+      appended data as the authoritative source for project and experience details.
 
       How to Use This Chatbot:
       • Ask about education, skills, projects, or experience.
       • Expect concise, on-point replies with no extra “fluff.”
-      • The chatbot will only share information listed above.
+      • The chatbot will only share information provided to it in this context.
       • If you ask about something not in the context, it will respond with "I don't have that information."
       • DO NOT RETURN RESPONSES IN MARKDOWN FORMAT. KEEP IT PLAIN TEXT.
     `;
@@ -135,7 +110,10 @@ const ChatBox = () => {
   return (
     <div className="chatbox-container">
       <div className="chatbox-header">
-        <h2>Chat with me</h2>
+        <div>
+          <span className="chatbox-label">Portfolio assistant</span>
+          <h2>Ask about Akshat</h2>
+        </div>
         <div className="chatbox-status">
           {isLoading ? 'Typing...' : 'Online'}
           <span className={`status-indicator ${isLoading ? 'typing' : 'online'}`}></span>
@@ -145,8 +123,13 @@ const ChatBox = () => {
       <div className="chatbox-messages" aria-live="polite">
         {messages.length === 0 ? (
           <div className="chat-empty-state">
-            <div className="empty-icon">💬</div>
-            <p>Ask me anything about my projects, skills, or interests!</p>
+            <div className="empty-icon">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M20 15a3 3 0 01-3 3H9l-5 3v-3.5A3 3 0 012 15V6a3 3 0 013-3h12a3 3 0 013 3v9z" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+              </svg>
+            </div>
+            <h3>What would you like to know?</h3>
+            <p>Try asking about research, technical skills, or a recent project.</p>
           </div>
         ) : (
           messages.map((msg, index) => (
@@ -181,7 +164,7 @@ const ChatBox = () => {
         <textarea
           ref={inputRef}
           value={input}
-          placeholder="Type your message..."
+          placeholder="Ask a question…"
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
           disabled={isLoading}
@@ -200,7 +183,7 @@ const ChatBox = () => {
       </div>
       
       <div className="chatbox-footer">
-        <p>Powered by GPT-4.1</p>
+        <p>AI-generated answers may make mistakes.</p>
       </div>
     </div>
   );

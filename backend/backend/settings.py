@@ -20,12 +20,27 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-68l)d6ldraql!h0ybu_37cmmaj#v!x$)l3-^%05--q)oxgsv)+'
+# Read from the environment in production; falls back to the historical dev key.
+SECRET_KEY = os.getenv(
+    'DJANGO_SECRET_KEY',
+    'django-insecure-68l)d6ldraql!h0ybu_37cmmaj#v!x$)l3-^%05--q)oxgsv)+',
+)
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# Defaults to True so local `manage.py runserver` is unchanged; the prod
+# docker-compose sets DJANGO_DEBUG=False.
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = ['its-akki.com', 'www.its-akki.com', 'api.its-akki.com', 'localhost', '127.0.0.1', 'api.perplexity.ai']
+ALLOWED_HOSTS = os.getenv(
+    'DJANGO_ALLOWED_HOSTS',
+    'its-akki.com,www.its-akki.com,api.its-akki.com,localhost,127.0.0.1,api.perplexity.ai',
+).split(',')
+
+# Origins trusted for CSRF (needed for the admin over HTTPS behind the proxy).
+CSRF_TRUSTED_ORIGINS = os.getenv(
+    'DJANGO_CSRF_TRUSTED_ORIGINS',
+    'https://its-akki.com,https://www.its-akki.com,https://api.its-akki.com',
+).split(',')
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -50,6 +65,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -187,8 +203,17 @@ USE_TZ = True
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
-
-STATIC_URL = 'static/'
+# STATIC_URL / STATIC_ROOT are defined once above. WhiteNoise serves collected
+# static files (Django admin, DRF) directly from gunicorn, with compression and
+# hashed filenames.
+STORAGES = {
+    'default': {
+        'BACKEND': 'django.core.files.storage.FileSystemStorage',
+    },
+    'staticfiles': {
+        'BACKEND': 'whitenoise.storage.CompressedManifestStaticFilesStorage',
+    },
+}
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field

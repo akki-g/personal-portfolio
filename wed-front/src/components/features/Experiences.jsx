@@ -1,12 +1,10 @@
-import React, { useEffect, useState } from 'react';
-import './Experiences.css';
+import { useEffect, useState } from 'react';
 import apiClient from '../../pages/AxiosInstance';
+import { sortExperiencesMostRecent } from '../../utils/experiences';
+import './Experiences.css';
 
-/**
- * Component that displays professional experience in an interactive format
- */
-const Experiences = () => {
-  const [experiences, setExperiences] = useState([]);  
+function Experiences() {
+  const [experiences, setExperiences] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -14,13 +12,11 @@ const Experiences = () => {
   useEffect(() => {
     const fetchExperiences = async () => {
       try {
-        setIsLoading(true);
-        const response = await apiClient.get('experiences');
-        setExperiences(response.data);
-        setError(null);
-      } catch (error) {
-        console.error('Error fetching experiences:', error);
-        setError('Failed to load experiences');
+        const response = await apiClient.get('experiences/');
+        setExperiences(sortExperiencesMostRecent(response.data));
+      } catch (fetchError) {
+        console.error('Error fetching experiences:', fetchError);
+        setError('Experience details could not be loaded.');
       } finally {
         setIsLoading(false);
       }
@@ -29,39 +25,42 @@ const Experiences = () => {
     fetchExperiences();
   }, []);
 
-  const activeExperience = experiences[activeIndex] || null;
+  if (isLoading) return <div className="experience-state">Loading experience…</div>;
+  if (error) return <div className="experience-state">{error}</div>;
+  if (experiences.length === 0) return <div className="experience-state">No experience has been published yet.</div>;
 
-  if (isLoading) return <div className="experiences-loading">Loading experiences...</div>;
-  if (error) return <div className="experiences-error">{error}</div>;
-  if (experiences.length === 0) return <div className="experiences-empty">No experiences available</div>;
+  const activeExperience = experiences[activeIndex];
 
   return (
     <div className="experiences-container">
-      <h2>Experiences</h2>
-
-      <div className="experience-scroller">
-        {experiences.map((exp, index) => (
-          <div
-            key={exp.id}
-            className={`experience-item ${index === activeIndex ? 'active' : ''}`}
+      <div className="experience-tabs" role="tablist" aria-label="Professional experience">
+        {experiences.map((experience, index) => (
+          <button
+            key={experience.id}
+            type="button"
+            role="tab"
+            aria-selected={index === activeIndex}
+            aria-controls="experience-panel"
+            className={index === activeIndex ? 'is-active' : ''}
             onClick={() => setActiveIndex(index)}
           >
-            {exp.role}
-          </div>
+            <span>{String(index + 1).padStart(2, '0')}</span>
+            <strong>{experience.company}</strong>
+            <small>{experience.role}</small>
+          </button>
         ))}
       </div>
 
-      {activeExperience && (
-        <div className="experience-detail">
-          <h3>{activeExperience.company}</h3>
-          <div className="experience-period">
-            {activeExperience.start_mthyr} - {activeExperience.end_mthyr || 'Present'}
-          </div>
-          <p className="experience-description">{activeExperience.description}</p>
+      <article id="experience-panel" className="experience-panel" role="tabpanel" key={activeExperience.id}>
+        <div className="experience-period">
+          {activeExperience.start_mthyr} to {activeExperience.end_mthyr || 'Present'}
         </div>
-      )}
+        <h3>{activeExperience.role}</h3>
+        <p className="experience-company">{activeExperience.company}</p>
+        <p className="experience-description">{activeExperience.description}</p>
+      </article>
     </div>
   );
-};
+}
 
 export default Experiences;

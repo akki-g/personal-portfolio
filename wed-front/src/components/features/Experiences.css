@@ -1,193 +1,146 @@
-/* Updated Experiences.css with improved styling */
 .experiences-container {
-  padding: 1.8rem;
-  border-radius: 12px;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.07);
-  position: relative;
-  overflow: hidden;
-}
-
-.experiences-container::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 4px;
-  height: 100%;
-  background: linear-gradient(145deg, #70d2ff, #eb7af9);
-  opacity: 0.6;
-}
-
-.experiences-container h2 {
-  font-family: var(--header-text-font);
-  font-size: 1.4rem;
-  font-weight: 700;
-  margin-bottom: 1.5rem;
-  color: var(--text-color);
-  position: relative;
-  display: inline-block;
-}
-
-.experiences-container h2::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
+  display: grid;
   width: 100%;
-  height: 2px;
-  background: linear-gradient(to right, #70d2ff, #eb7af9);
+  min-width: 0;
+  border-top: 1px solid var(--border-strong);
+  grid-template-columns: minmax(180px, 0.52fr) minmax(0, 1fr);
 }
 
-.experience-scroller {
+.experience-tabs {
   display: flex;
-  gap: 0.75rem;
-  overflow-x: auto;
-  padding: 0.5rem 0;
-  margin-bottom: 1.5rem;
-  scrollbar-width: thin;
+  min-width: 0;
+  flex-direction: column;
+  border-right: 1px solid var(--border-color);
 }
 
-.experience-scroller::-webkit-scrollbar {
-  height: 6px;
-}
-
-.experience-scroller::-webkit-scrollbar-thumb {
-  background-color: var(--border-color);
-  border-radius: 3px;
-}
-
-.experience-item {
-  padding: 0.6rem 1.2rem;
-  background-color: var(--bg-color);
-  border: 1px solid var(--border-color);
-  border-radius: 30px;
+.experience-tabs button {
+  display: grid;
+  min-width: 0;
+  padding: 1.25rem 1.25rem 1.25rem 0;
+  border: 0;
+  border-bottom: 1px solid var(--border-color);
+  grid-template-columns: 30px 1fr;
+  gap: 0.25rem 0.4rem;
+  color: var(--text-muted);
+  background: transparent;
+  text-align: left;
   cursor: pointer;
-  white-space: nowrap;
-  font-family: var(--normal-text-font);
-  font-size: 0.9rem;
-  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+  transition: color 160ms ease, background-color 160ms ease, padding 160ms ease;
+}
+
+.experience-tabs button:hover,
+.experience-tabs button.is-active {
+  padding-left: 0.8rem;
   color: var(--text-color);
+  background: var(--surface-color);
 }
 
-.experience-item:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  border-color: #70d2ff;
+.experience-tabs button > span {
+  color: var(--accent-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.65rem;
+  grid-row: 1 / span 2;
 }
 
-.experience-item.active {
-  background: linear-gradient(90deg, #eb7af9, #70d2ff);
-  color: #fff;
-  border-color: transparent;
-  font-weight: 500;
-  box-shadow: 0 4px 15px rgba(112, 210, 255, 0.3);
+.experience-tabs strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.88rem;
+  font-weight: 650;
+  line-height: 1.3;
 }
 
-.experience-detail {
-  padding: 1.5rem;
-  background-color: var(--bg-color);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
+.experience-tabs small {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 0.72rem;
+  line-height: 1.35;
 }
 
-.experience-detail::after {
-  content: '';
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 60px;
-  height: 60px;
-  border-radius: 0 0 8px 0;
-  opacity: 0.5;
+.experience-panel {
+  min-height: 430px;
+  min-width: 0;
+  padding: clamp(30px, 5vw, 64px);
+  background: var(--surface-color);
+  animation: experience-in 220ms ease both;
 }
 
-.experience-detail h3 {
-  font-family: var(--header-text-font);
-  font-size: 1.3rem;
-  margin-bottom: 0.5rem;
-  color: var(--text-color);
+@keyframes experience-in {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 .experience-period {
-  font-family: var(--normal-text-font);
-  font-size: 0.9rem;
-  color: var(--text-color);
-  opacity: 0.8;
-  margin-bottom: 1.2rem;
-  font-style: italic;
-  position: relative;
-  padding-left: 1.2rem;
+  color: var(--accent-color);
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
 }
 
-.experience-period::before {
-  content: '•';
-  position: absolute;
-  left: 0;
-  color: #eb7af9;
-  font-size: 1.2rem;
-  line-height: 1;
+.experience-panel h3 {
+  max-width: 100%;
+  margin: clamp(48px, 6vw, 72px) 0 0.65rem;
+  overflow-wrap: anywhere;
+  font-size: clamp(1.9rem, 3.2vw, 3rem);
+  font-weight: 580;
+  line-height: 1.02;
+}
+
+.experience-company {
+  overflow-wrap: anywhere;
+  color: var(--text-muted);
+  font-size: 0.9rem;
 }
 
 .experience-description {
-  font-family: var(--normal-text-font);
-  font-size: 0.95rem;
-  line-height: 1.7;
-  color: var(--text-color);
+  max-width: 600px;
+  margin-top: 2rem;
+  padding-top: 1.3rem;
+  border-top: 1px solid var(--border-color);
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  overflow-wrap: anywhere;
 }
 
-/* Loading and error states */
-.experiences-loading,
-.experiences-error,
-.experiences-empty {
-  padding: 2.5rem;
-  text-align: center;
-  color: var(--text-color);
-  font-family: var(--normal-text-font);
-  background-color: var(--bg-color);
-  border-radius: 8px;
-  border: 1px dashed var(--border-color);
-  position: relative;
+.experience-state {
+  display: grid;
+  min-height: 280px;
+  place-items: center;
+  border: 1px solid var(--border-color);
+  color: var(--text-muted);
+  background: var(--surface-color);
+  font-size: 0.9rem;
 }
 
-.experiences-loading::after {
-  content: '';
-  display: inline-block;
-  width: 1.5rem;
-  height: 1.5rem;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 50%;
-  border-top-color: #eb7af9;
-  border-right-color: #70d2ff;
-  animation: spin 1s ease-in-out infinite;
-  margin-left: 0.5rem;
-  vertical-align: middle;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
+@media (max-width: 620px) {
   .experiences-container {
-    padding: 1.4rem;
+    grid-template-columns: 1fr;
   }
-  
-  .experience-detail {
-    padding: 1.2rem;
+
+  .experience-tabs {
+    overflow-x: auto;
+    flex-direction: row;
+    border-right: 0;
   }
-  
-  .experience-scroller {
-    margin-bottom: 1rem;
+
+  .experience-tabs button {
+    min-width: 190px;
+    padding: 1rem;
   }
-  
-  .experience-item {
-    padding: 0.5rem 1rem;
-    font-size: 0.85rem;
+
+  .experience-tabs button:hover,
+  .experience-tabs button.is-active {
+    padding-left: 1rem;
+  }
+
+  .experience-panel {
+    min-height: 360px;
+    padding: 28px 22px 34px;
+  }
+
+  .experience-panel h3 {
+    margin-top: 2.75rem;
+    font-size: clamp(1.8rem, 9vw, 2.5rem);
   }
 }

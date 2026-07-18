@@ -20,9 +20,8 @@ class ContactAdmin(admin.ModelAdmin):
 
 @admin.register(About)
 class AboutAdmin(admin.ModelAdmin):
-    list_display = ['title', 'image1', 'image2', 'image3', 'image4', 'resume']
-    search_fields = ['image1', 'image2', 'image3', 'image4', 'resume']
-    list_filter = ['image1', 'image2', 'image3', 'image4', 'resume']    
+    list_display = ['title', 'current_focus_title', 'availability_text', 'resume']
+    search_fields = ['title', 'current_focus_title', 'availability_text']
 
 @admin.register(Experience)
 class ExperienceAdmin(admin.ModelAdmin):

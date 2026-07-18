@@ -1,0 +1,32 @@
+# Local dev overlay: no TLS or edge proxy. Services use published ports.
+# Usage:  docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+#   backend  -> http://localhost:${BACKEND_PORT:-8010}
+#   frontend -> http://localhost:${FRONTEND_PORT:-8082}
+#
+# Override the ports (e.g. if they collide with another project's dev stack)
+# by exporting BACKEND_PORT / FRONTEND_PORT before running compose/make.
+
+services:
+  backend:
+    environment:
+      DJANGO_DEBUG: "True"
+      DJANGO_ALLOWED_HOSTS: "localhost,127.0.0.1,0.0.0.0"
+      DJANGO_CSRF_TRUSTED_ORIGINS: "http://localhost:${FRONTEND_PORT:-8082},http://localhost:${BACKEND_PORT:-8010}"
+    ports:
+      - "${BACKEND_PORT:-8010}:8000"
+
+  frontend:
+    build:
+      context: ./wed-front
+      args:
+        VITE_API_BASE_URL: "http://localhost:${BACKEND_PORT:-8010}/api/"
+    ports:
+      - "${FRONTEND_PORT:-8082}:80"
+
+  # The edge proxy and certbot are not used locally, so gate them behind a profile.
+  # so they don't start under the dev overlay.
+  proxy:
+    profiles: ["prod-only"]
+
+  certbot:
+    profiles: ["prod-only"]

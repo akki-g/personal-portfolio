@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import { useState, useEffect, useRef } from 'react';
 import { Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';
@@ -10,7 +11,6 @@ const RemoteAccess = () => {
     const [loading, setLoading] = useState(false);
     const [currentDirectory, setCurrentDirectory] = useState('.');
     const [files, setFiles] = useState([]);
-    const [commandHistory, setCommandHistory] = useState([]);
     
     // Auth form state
     const [credentials, setCredentials] = useState({
@@ -78,7 +78,6 @@ const RemoteAccess = () => {
                 if (code === 13) { // Enter
                     if (commandBuffer.trim()) {
                         executeCommand(commandBuffer.trim());
-                        setCommandHistory(prev => [...prev, commandBuffer.trim()]);
                     }
                     commandBuffer = '';
                     terminal.current.write('\r\n');

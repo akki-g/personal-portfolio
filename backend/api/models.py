@@ -63,6 +63,46 @@ class About(models.Model):
     image3 = models.ImageField(upload_to=image_3_upload_to, blank=True, null=True)
     image4 = models.ImageField(upload_to=image_4_upload_to, blank=True, null=True)
     resume = models.FileField(upload_to=resume_upload_to, blank=True, null=True)
+    availability_text = models.CharField(
+        max_length=120,
+        blank=True,
+        default='Open to 2026–27 opportunities',
+    )
+    current_focus_label = models.CharField(
+        max_length=80,
+        blank=True,
+        default='Currently exploring',
+    )
+    current_focus_title = models.CharField(
+        max_length=180,
+        blank=True,
+        default='Multi-agent reinforcement learning',
+    )
+    current_focus_organization = models.CharField(
+        max_length=80,
+        blank=True,
+        default='UCF',
+    )
+    current_focus_category = models.CharField(
+        max_length=80,
+        blank=True,
+        default='Research',
+    )
+    current_focus_period = models.CharField(
+        max_length=80,
+        blank=True,
+        default='2024 to present',
+    )
+    location_latitude = models.CharField(
+        max_length=40,
+        blank=True,
+        default='28.5383° N',
+    )
+    location_longitude = models.CharField(
+        max_length=40,
+        blank=True,
+        default='81.3792° W',
+    )
 
     def __str__(self):
         return self.title
