@@ -7,13 +7,15 @@
 # proxy's /etc/letsencrypt mount at your existing /etc/letsencrypt instead.
 set -e
 
-DOMAINS="its-akki.com www.its-akki.com api.its-akki.com"
+DOMAINS="its-akki.com www.its-akki.com api.its-akki.com citepilot.its-akki.com"
 EMAIL="akshat.guduru@gmail.com"          # Let's Encrypt expiry notices
 PRIMARY="its-akki.com"                    # cert lineage name (live/its-akki.com)
 CONF="./deploy/certbot/conf"
 LIVE="$CONF/live/$PRIMARY"
 
 mkdir -p "$LIVE" ./deploy/certbot/www
+docker network inspect portfolio-edge >/dev/null 2>&1 \
+  || docker network create portfolio-edge >/dev/null
 
 echo "### Creating a temporary self-signed cert so nginx can start ..."
 docker run --rm -v "$(pwd)/deploy/certbot/conf:/etc/letsencrypt" certbot/certbot \

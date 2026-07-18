@@ -10,7 +10,7 @@ DEV_FILES := -f docker-compose.yml -f docker-compose.dev.yml
 COMPOSE   := docker compose $(DEV_FILES)
 PROD      := docker compose
 
-.PHONY: help build up down restart logs ps shell-backend shell-frontend \
+.PHONY: help build up down restart logs ps shell-backend shell-frontend edge-network prepare-runtime \
         migrate manage test clean \
         prod-build prod-up prod-down prod-logs prod-ps
 
@@ -60,7 +60,15 @@ clean: ## Stop the dev stack and remove its containers/volumes/networks
 prod-build: ## Build production images
 	$(PROD) build
 
-prod-up: ## Start the production stack (proxy + certbot included)
+edge-network: ## Create the shared network used by project containers
+	@docker network inspect portfolio-edge >/dev/null 2>&1 || docker network create portfolio-edge
+
+prepare-runtime: ## Create ignored host paths required by production mounts
+	@mkdir -p backend/media deploy/certbot/conf deploy/certbot/www
+	@test ! -d backend/db.sqlite3 || { echo "backend/db.sqlite3 is a directory; remove it and rerun make prod-up" >&2; exit 1; }
+	@touch backend/db.sqlite3
+
+prod-up: edge-network prepare-runtime ## Start the production stack (proxy + certbot included)
 	$(PROD) up --build -d
 
 prod-down: ## Stop the production stack
