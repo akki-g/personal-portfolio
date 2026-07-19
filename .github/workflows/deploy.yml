@@ -2,41 +2,58 @@ name: Deploy to AWS EC2
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
+
+concurrency:
+  group: portfolio-production
+  cancel-in-progress: false
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 30
 
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      - name: Check out exact commit
+        uses: actions/checkout@v4
 
-      - name: Setup SSH Key
+      - name: Configure SSH key
+        shell: bash
         run: |
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > private_key
-          chmod 600 private_key
-          eval "$(ssh-agent -s)"
-          ssh-add private_key
+          set -Eeuo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > "$HOME/.ssh/portfolio-deploy"
+          chmod 600 "$HOME/.ssh/portfolio-deploy"
 
-      - name: Deploy to EC2
+      - name: Deploy Docker stack
+        shell: bash
         run: |
-          ssh -o StrictHostKeyChecking=no -i private_key ubuntu@52.204.158.12 <<EOF
-            cd /home/ubuntu/personal-portfolio
-            git pull origin main
-            cd backend
-            source webenv/bin/activate
-            pip install -r req.txt
-            cd ../wed-front
-            npm install
-            npm run build
-            sudo rm -rf /var/www/vhosts/frontend/*
-            sudo cp -r dist/* /var/www/vhosts/frontend/
-            sudo chown -R www-data:www-data /var/www/vhosts/frontend/
-            sudo chmod -R 755 /var/www/vhosts/frontend/
-            sudo systemctl daemon-reload
-            sudo systemctl restart nginx
-            sudo systemctl restart gunicorn
-          EOF
-          
+          set -Eeuo pipefail
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=accept-new \
+            -i "$HOME/.ssh/portfolio-deploy" \
+            ubuntu@52.204.158.12 'bash -se' <<'REMOTE'
+          set -Eeuo pipefail
+          cd /home/ubuntu/personal-portfolio
+
+          git pull --ff-only origin main
+
+          # Refuse to fight the legacy host proxy. The first Docker cutover is
+          # intentionally performed once from the EC2 browser terminal.
+          if sudo systemctl is-active --quiet nginx \
+            && ! docker compose ps --status running --services | grep -qx proxy; then
+            echo "deploy: host nginx is still active; complete the one-time Docker cutover first" >&2
+            exit 1
+          fi
+
+          make prod-up
+          docker compose ps
+
+          curl --fail --silent --show-error \
+            --retry 12 --retry-delay 5 --retry-connrefused \
+            https://its-akki.com/ >/dev/null
+          curl --fail --silent --show-error \
+            --retry 12 --retry-delay 5 --retry-connrefused \
+            https://api.its-akki.com/api/projects/ >/dev/null
+          REMOTE

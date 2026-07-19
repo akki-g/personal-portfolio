@@ -18,8 +18,9 @@ docker network inspect portfolio-edge >/dev/null 2>&1 \
   || docker network create portfolio-edge >/dev/null
 
 echo "### Creating a temporary self-signed cert so nginx can start ..."
-docker run --rm -v "$(pwd)/deploy/certbot/conf:/etc/letsencrypt" certbot/certbot \
-  sh -c "openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
+docker run --rm --entrypoint sh \
+  -v "$(pwd)/deploy/certbot/conf:/etc/letsencrypt" certbot/certbot \
+  -c "openssl req -x509 -nodes -newkey rsa:2048 -days 1 \
     -keyout /etc/letsencrypt/live/$PRIMARY/privkey.pem \
     -out /etc/letsencrypt/live/$PRIMARY/fullchain.pem \
     -subj '/CN=localhost'"
