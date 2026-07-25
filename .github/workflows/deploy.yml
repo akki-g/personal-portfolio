@@ -50,6 +50,13 @@ jobs:
           make prod-up
           docker compose ps
 
+          # proxy does plain `proxy_pass http://frontend:80;` / `http://backend:8000;`
+          # (no resolver + variable trick), so it caches their Docker-internal IPs at
+          # nginx startup/reload time. Recreating those containers above gives them
+          # new IPs, which proxy won't notice until it re-resolves DNS -- reload it
+          # now so it doesn't keep proxying to now-dead addresses and 502 everything.
+          docker compose exec proxy nginx -s reload
+
           curl --fail --silent --show-error \
             --retry 12 --retry-delay 5 --retry-connrefused \
             https://its-akki.com/ >/dev/null
