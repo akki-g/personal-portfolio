@@ -194,7 +194,7 @@ jobs:
               -d jobs.its-akki.com </dev/null
             docker compose exec -T proxy nginx -s reload < /dev/null
             curl --fail --silent --show-error \
-              --retry 12 --retry-delay 5 --retry-connrefused \
+              --retry 12 --retry-delay 5 --retry-all-errors \
               https://jobs.its-akki.com/healthz >/dev/null
           else
             echo "DNS pending: add an A record for jobs.its-akki.com -> 52.204.158.12"
