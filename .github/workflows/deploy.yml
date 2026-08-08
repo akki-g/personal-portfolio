@@ -289,6 +289,14 @@ jobs:
           target="$1"
           repository="$2"
           release_sha="$3"
+          case "$target" in
+            posted) compose_project=posted ;;
+            citepilot) compose_project=citepilot ;;
+            *)
+              echo "deploy: unsupported target" >&2
+              exit 2
+              ;;
+          esac
 
           matches=()
           while IFS= read -r -d '' git_dir; do
@@ -299,19 +307,31 @@ jobs:
             fi
           done < <(find /opt /home/ubuntu -type d -name .git -print0 2>/dev/null)
 
-          if [[ "${#matches[@]}" -ne 1 ]]; then
-            echo "deploy: expected exactly one existing $repository checkout; found ${#matches[@]}" >&2
-            exit 3
-          fi
-          app_dir="${matches[0]}"
+          active_dirs=()
+          while read -r container_id; do
+            [[ -n "$container_id" ]] || continue
+            active_dir="$(docker inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' "$container_id")"
+            [[ -n "$active_dir" ]] && active_dirs+=("$active_dir")
+          done < <(docker ps -aq --filter "label=com.docker.compose.project=$compose_project")
 
-          case "$target" in
-            posted|citepilot) ;;
-            *)
-              echo "deploy: unsupported target" >&2
-              exit 2
-              ;;
-          esac
+          if [[ "${#matches[@]}" -eq 1 ]]; then
+            app_dir="${matches[0]}"
+          else
+            unique_active_dirs="$(printf '%s\n' "${active_dirs[@]}" | sed '/^$/d' | sort -u)"
+            mapfile -t active_dirs <<<"$unique_active_dirs"
+            if [[ "${#active_dirs[@]}" -ne 1 ]]; then
+              echo "deploy: expected one active $compose_project working directory; found ${#active_dirs[@]}" >&2
+              exit 3
+            fi
+            app_dir="${active_dirs[0]}"
+            case " ${matches[*]} " in
+              *" $app_dir "*) ;;
+              *)
+                echo "deploy: active $compose_project working directory does not match a $repository checkout" >&2
+                exit 3
+                ;;
+            esac
+          fi
 
           # The application deployer owns its own lock, volume identity,
           # verified database backup, rollback, and internal health gate.
