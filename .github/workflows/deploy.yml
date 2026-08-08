@@ -4,6 +4,16 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      target:
+        description: Deployment target
+        required: false
+        default: portfolio
+        type: choice
+        options:
+          - portfolio
+          - posted
+          - citepilot
 
 permissions:
   contents: read
@@ -14,6 +24,7 @@ concurrency:
 
 jobs:
   deploy:
+    if: github.event_name == 'push' || inputs.target == 'portfolio'
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -216,3 +227,122 @@ jobs:
         if: always()
         shell: bash
         run: rm -f "$RUNNER_TEMP/job-signal.env" "$HOME/.ssh/portfolio-deploy"
+
+  deploy-project:
+    if: inputs.target == 'posted' || inputs.target == 'citepilot'
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - name: Resolve exact release
+        id: release
+        env:
+          TARGET: ${{ inputs.target }}
+        run: |
+          set -Eeuo pipefail
+          case "$TARGET" in
+            posted)
+              repository=Posted
+              public_url=https://posted.its-akki.com
+              health_path=/api/v1/health
+              ;;
+            citepilot)
+              repository=CitePilot
+              public_url=https://citepilot.its-akki.com
+              health_path=/api/health
+              ;;
+            *)
+              echo "unsupported deployment target: $TARGET" >&2
+              exit 2
+              ;;
+          esac
+          release_sha="$(git ls-remote --exit-code "https://github.com/akki-g/$repository.git" refs/heads/main | awk 'NR == 1 {print $1}')"
+          [[ "$release_sha" =~ ^[0-9a-f]{40}$ ]]
+          {
+            echo "repository=$repository"
+            echo "release_sha=$release_sha"
+            echo "public_url=$public_url"
+            echo "health_path=$health_path"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Configure SSH key
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          install -d -m 700 "$HOME/.ssh"
+          printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > "$HOME/.ssh/portfolio-deploy"
+          chmod 600 "$HOME/.ssh/portfolio-deploy"
+
+      - name: Deploy exact commit without changing the edge proxy
+        shell: bash
+        env:
+          TARGET: ${{ inputs.target }}
+          REPOSITORY: ${{ steps.release.outputs.repository }}
+          RELEASE_SHA: ${{ steps.release.outputs.release_sha }}
+        run: |
+          set -Eeuo pipefail
+          ssh \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=accept-new \
+            -i "$HOME/.ssh/portfolio-deploy" \
+            ubuntu@52.204.158.12 'bash -se' -- "$TARGET" "$REPOSITORY" "$RELEASE_SHA" <<'REMOTE'
+          set -Eeuo pipefail
+          target="$1"
+          repository="$2"
+          release_sha="$3"
+
+          matches=()
+          while IFS= read -r -d '' git_dir; do
+            app_dir="${git_dir%/.git}"
+            origin_url="$(git -C "$app_dir" remote get-url origin 2>/dev/null || true)"
+            if [[ "$origin_url" == *"github.com/akki-g/$repository"* || "$origin_url" == *"github.com:akki-g/$repository"* ]]; then
+              matches+=("$app_dir")
+            fi
+          done < <(find /opt /home/ubuntu -type d -name .git -print0 2>/dev/null)
+
+          if [[ "${#matches[@]}" -ne 1 ]]; then
+            echo "deploy: expected exactly one existing $repository checkout; found ${#matches[@]}" >&2
+            exit 3
+          fi
+          app_dir="${matches[0]}"
+
+          case "$target" in
+            posted|citepilot) ;;
+            *)
+              echo "deploy: unsupported target" >&2
+              exit 2
+              ;;
+          esac
+
+          # The application deployer owns its own lock, volume identity,
+          # verified database backup, rollback, and internal health gate.
+          bash -lc 'set -Eeuo pipefail
+            app_dir="$1"
+            release_sha="$2"
+            cd "$app_dir"
+            git fetch --quiet origin "$release_sha"
+            git cat-file -e "$release_sha^{commit}"
+            git show "$release_sha":infra/deploy/deploy.sh | bash -s -- "$release_sha" "$app_dir"
+          ' bash "$app_dir" "$release_sha"
+          REMOTE
+
+      - name: Verify public HTTPS endpoint
+        shell: bash
+        env:
+          PUBLIC_URL: ${{ steps.release.outputs.public_url }}
+          HEALTH_PATH: ${{ steps.release.outputs.health_path }}
+        run: |
+          set -Eeuo pipefail
+          for _ in $(seq 1 18); do
+            if curl --fail --silent --show-error --max-time 15 "$PUBLIC_URL/" >/dev/null \
+              && curl --fail --silent --show-error --max-time 15 "$PUBLIC_URL$HEALTH_PATH" >/dev/null; then
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "public HTTPS verification failed for $PUBLIC_URL" >&2
+          exit 1
+
+      - name: Remove local secret material
+        if: always()
+        shell: bash
+        run: rm -f "$HOME/.ssh/portfolio-deploy"
