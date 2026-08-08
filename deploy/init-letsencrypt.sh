@@ -7,7 +7,7 @@
 # proxy's /etc/letsencrypt mount at your existing /etc/letsencrypt instead.
 set -e
 
-DOMAINS="its-akki.com www.its-akki.com api.its-akki.com citepilot.its-akki.com"
+DOMAINS="its-akki.com www.its-akki.com api.its-akki.com citepilot.its-akki.com posted.its-akki.com jobs.its-akki.com"
 EMAIL="akshat.guduru@gmail.com"          # Let's Encrypt expiry notices
 PRIMARY="its-akki.com"                    # cert lineage name (live/its-akki.com)
 CONF="./deploy/certbot/conf"

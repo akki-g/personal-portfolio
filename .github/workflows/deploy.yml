@@ -3,6 +3,10 @@ name: Deploy to AWS EC2
 on:
   push:
     branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: portfolio-production
@@ -25,6 +29,58 @@ jobs:
           printf '%s\n' "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > "$HOME/.ssh/portfolio-deploy"
           chmod 600 "$HOME/.ssh/portfolio-deploy"
 
+      - name: Build encrypted Job Signal environment file
+        shell: bash
+        env:
+          JOBS_POSTGRES_PASSWORD: ${{ secrets.JOBS_POSTGRES_PASSWORD }}
+          JOBS_AUTH_SECRET: ${{ secrets.JOBS_AUTH_SECRET }}
+          JOBS_ANTHROPIC_API_KEY: ${{ secrets.JOBS_ANTHROPIC_API_KEY }}
+          JOBS_RESEND_API_KEY: ${{ secrets.JOBS_RESEND_API_KEY }}
+          JOBS_RESEND_FROM_EMAIL: ${{ secrets.JOBS_RESEND_FROM_EMAIL }}
+          JOBS_SIGNALWIRE_SPACE: ${{ secrets.JOBS_SIGNALWIRE_SPACE }}
+          JOBS_SIGNALWIRE_PROJECT_ID: ${{ secrets.JOBS_SIGNALWIRE_PROJECT_ID }}
+          JOBS_SIGNALWIRE_API_TOKEN: ${{ secrets.JOBS_SIGNALWIRE_API_TOKEN }}
+          JOBS_SIGNALWIRE_FROM_NUMBER: ${{ secrets.JOBS_SIGNALWIRE_FROM_NUMBER }}
+        run: |
+          set -Eeuo pipefail
+          umask 077
+          python3 - <<'PYTHON' > "$RUNNER_TEMP/job-signal.env"
+          import json
+          import os
+
+          values = {
+              "POSTGRES_PASSWORD": os.environ["JOBS_POSTGRES_PASSWORD"],
+              "AUTH_SECRET": os.environ["JOBS_AUTH_SECRET"],
+              "AUTH_COOKIE_SECURE": "true",
+              "FRONTEND_ORIGINS": "https://jobs.its-akki.com",
+              "ANTHROPIC_API_KEY": os.environ["JOBS_ANTHROPIC_API_KEY"],
+              "RESEND_API_KEY": os.environ["JOBS_RESEND_API_KEY"],
+              "RESEND_FROM_EMAIL": os.environ["JOBS_RESEND_FROM_EMAIL"],
+              "SIGNALWIRE_SPACE": os.environ["JOBS_SIGNALWIRE_SPACE"],
+              "SIGNALWIRE_PROJECT_ID": os.environ["JOBS_SIGNALWIRE_PROJECT_ID"],
+              "SIGNALWIRE_API_TOKEN": os.environ["JOBS_SIGNALWIRE_API_TOKEN"],
+              "SIGNALWIRE_FROM_NUMBER": os.environ["JOBS_SIGNALWIRE_FROM_NUMBER"],
+              "SCHEDULER_TIMEZONE": "America/New_York",
+              "DAILY_EMAIL_HOUR": "8",
+          }
+          missing = [key for key, value in values.items() if not value]
+          if missing:
+              raise SystemExit(f"Missing required deployment secrets: {', '.join(missing)}")
+          for key, value in values.items():
+              print(f"{key}={json.dumps(value)}")
+          PYTHON
+
+      - name: Upload Job Signal environment file
+        shell: bash
+        run: |
+          set -Eeuo pipefail
+          scp \
+            -o BatchMode=yes \
+            -o StrictHostKeyChecking=accept-new \
+            -i "$HOME/.ssh/portfolio-deploy" \
+            "$RUNNER_TEMP/job-signal.env" \
+            ubuntu@52.204.158.12:/home/ubuntu/job-signal.env
+
       - name: Deploy Docker stack
         shell: bash
         run: |
@@ -35,6 +91,7 @@ jobs:
             -i "$HOME/.ssh/portfolio-deploy" \
             ubuntu@52.204.158.12 'bash -se' <<'REMOTE'
           set -Eeuo pipefail
+          trap 'rm -f /home/ubuntu/job-signal.env' EXIT
           cd /home/ubuntu/personal-portfolio
 
           git pull --ff-only origin main
@@ -48,7 +105,66 @@ jobs:
           fi
 
           make prod-up
-          docker compose ps
+
+          JOBS_DIR=/home/ubuntu/automated_swe_jobs
+          if [ ! -d "$JOBS_DIR/.git" ]; then
+            git clone https://github.com/akki-g/automated_swe_jobs.git "$JOBS_DIR"
+          fi
+          git -C "$JOBS_DIR" fetch origin main
+          git -C "$JOBS_DIR" checkout main
+          git -C "$JOBS_DIR" pull --ff-only origin main
+          install -m 600 /home/ubuntu/job-signal.env "$JOBS_DIR/.env"
+          rm -f /home/ubuntu/job-signal.env
+
+          docker network inspect portfolio-edge >/dev/null 2>&1 \
+            || docker network create portfolio-edge >/dev/null
+          docker compose --project-directory "$JOBS_DIR" \
+            -f "$JOBS_DIR/compose.production.yml" up --build -d --remove-orphans
+
+          # Keep the portfolio project card data-driven and safe to rerun.
+          docker compose exec -T backend python manage.py shell <<'PYTHON'
+          from api.models import Project
+
+          Project.objects.update_or_create(
+              title="Job Signal",
+              defaults={
+                  "monthyr": "August 2026",
+                  "short_desc": (
+                      "A personalized early-career job discovery platform that ingests "
+                      "resumes, matches roles across industries, and sends a focused daily digest."
+                  ),
+                  "description": (
+                      "Job Signal combines a React onboarding experience with a FastAPI matching "
+                      "pipeline, curated ATS integrations, structured resume extraction, and "
+                      "daily email delivery."
+                  ),
+                  "repo_link": "https://github.com/akki-g/automated_swe_jobs",
+                  "live_link": "https://jobs.its-akki.com",
+                  "technologies": (
+                      "React, TypeScript, Vite, FastAPI, Python, PostgreSQL, SQLAlchemy, "
+                      "Anthropic, Resend, Docker, Nginx"
+                  ),
+              },
+          )
+          PYTHON
+
+          # Route 53 can be updated without static credentials when EC2 has an
+          # instance role with route53:ChangeResourceRecordSets permission.
+          # Otherwise the workflow leaves a clear manual DNS instruction.
+          if command -v aws >/dev/null 2>&1 \
+            && aws sts get-caller-identity >/dev/null 2>&1; then
+            ZONE_ID="$(aws route53 list-hosted-zones-by-name \
+              --dns-name its-akki.com \
+              --query "HostedZones[?Name=='its-akki.com.']|[0].Id" \
+              --output text | sed 's#^/hostedzone/##')"
+            if [ -n "$ZONE_ID" ] && [ "$ZONE_ID" != "None" ]; then
+              aws route53 change-resource-record-sets \
+                --hosted-zone-id "$ZONE_ID" \
+                --change-batch '{"Changes":[{"Action":"UPSERT","ResourceRecordSet":{"Name":"jobs.its-akki.com","Type":"A","TTL":300,"ResourceRecords":[{"Value":"52.204.158.12"}]}}]}' \
+                >/dev/null
+              echo "Route 53: jobs.its-akki.com -> 52.204.158.12"
+            fi
+          fi
 
           # proxy does plain `proxy_pass http://frontend:80;` / `http://backend:8000;`
           # (no resolver + variable trick), so it caches their Docker-internal IPs at
@@ -57,6 +173,33 @@ jobs:
           # now so it doesn't keep proxying to now-dead addresses and 502 everything.
           docker compose exec proxy nginx -s reload
 
+          docker compose --project-directory "$JOBS_DIR" \
+            -f "$JOBS_DIR/compose.production.yml" exec -T web \
+            wget -q -O- http://127.0.0.1:8080/healthz >/dev/null
+
+          # ACME can only validate after public DNS points at this instance.
+          if getent ahostsv4 jobs.its-akki.com \
+            | awk '{print $1}' \
+            | grep -qx '52.204.158.12'; then
+            docker compose run --rm --entrypoint certbot certbot certonly \
+              --webroot -w /var/www/certbot \
+              --email akshat.guduru@gmail.com --agree-tos --no-eff-email \
+              --cert-name its-akki.com --expand --non-interactive \
+              -d its-akki.com -d www.its-akki.com -d api.its-akki.com \
+              -d citepilot.its-akki.com -d posted.its-akki.com \
+              -d jobs.its-akki.com
+            docker compose exec proxy nginx -s reload
+            curl --fail --silent --show-error \
+              --retry 12 --retry-delay 5 --retry-connrefused \
+              https://jobs.its-akki.com/healthz >/dev/null
+          else
+            echo "DNS pending: add an A record for jobs.its-akki.com -> 52.204.158.12"
+          fi
+
+          docker compose ps
+          docker compose --project-directory "$JOBS_DIR" \
+            -f "$JOBS_DIR/compose.production.yml" ps
+
           curl --fail --silent --show-error \
             --retry 12 --retry-delay 5 --retry-connrefused \
             https://its-akki.com/ >/dev/null
@@ -64,3 +207,8 @@ jobs:
             --retry 12 --retry-delay 5 --retry-connrefused \
             https://api.its-akki.com/api/projects/ >/dev/null
           REMOTE
+
+      - name: Remove local secret material
+        if: always()
+        shell: bash
+        run: rm -f "$RUNNER_TEMP/job-signal.env" "$HOME/.ssh/portfolio-deploy"
