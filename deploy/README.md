@@ -101,6 +101,34 @@ docker compose exec proxy nginx -s reload
 Fresh installations automatically include the CitePilot hostname through
 `deploy/init-letsencrypt.sh`.
 
+## Job Signal connection
+
+Job Signal is deployed independently from
+`https://github.com/akki-g/automated_swe_jobs`. Its production `web` service
+joins `portfolio-edge` as `automated-jobs-web`, and this repository's proxy
+serves it at `https://jobs.its-akki.com`.
+
+The `Deploy to AWS EC2` workflow performs the complete repeatable deployment:
+
+1. It builds a root-only `.env` from encrypted `JOBS_*` repository secrets.
+2. It pulls and starts the Job Signal Postgres, API/scheduler, and web services.
+3. It upserts the Job Signal project card in the portfolio database.
+4. When public DNS resolves to the EC2 IP, it expands the shared Let's Encrypt
+   certificate and verifies the public `/healthz` endpoint.
+
+DNS is also upserted automatically when the instance has a Route 53-enabled IAM
+role. Without that role, create this record once in Route 53:
+
+```text
+Name: jobs.its-akki.com
+Type: A
+Value: 52.204.158.12
+TTL: 300
+```
+
+The workflow is manually rerunnable from GitHub Actions, which is useful after
+creating the DNS record or after publishing a new Job Signal release.
+
 ## Add another project (the repeatable pattern)
 
 1. Give the project a production web gateway that serves on a known internal
