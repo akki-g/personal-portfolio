@@ -327,6 +327,8 @@ jobs:
             case " ${matches[*]} " in
               *" $app_dir "*) ;;
               *)
+                printf 'deploy: matching checkouts: %s\n' "${matches[*]:-(none)}" >&2
+                printf 'deploy: active working directory: %s\n' "$app_dir" >&2
                 echo "deploy: active $compose_project working directory does not match a $repository checkout" >&2
                 exit 3
                 ;;
