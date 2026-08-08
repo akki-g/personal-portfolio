@@ -323,16 +323,18 @@ jobs:
               echo "deploy: expected one active $compose_project working directory; found ${#active_dirs[@]}" >&2
               exit 3
             fi
-            app_dir="${active_dirs[0]}"
-            case " ${matches[*]} " in
-              *" $app_dir "*) ;;
-              *)
-                printf 'deploy: matching checkouts: %s\n' "${matches[*]:-(none)}" >&2
-                printf 'deploy: active working directory: %s\n' "$app_dir" >&2
-                echo "deploy: active $compose_project working directory does not match a $repository checkout" >&2
-                exit 3
-                ;;
-            esac
+            active_dir="${active_dirs[0]}"
+            active_matches=()
+            for candidate in "${matches[@]}"; do
+              case "$active_dir" in
+                "$candidate"|"$candidate"/*) active_matches+=("$candidate") ;;
+              esac
+            done
+            if [[ "${#active_matches[@]}" -ne 1 ]]; then
+              echo "deploy: active $compose_project working directory does not identify one $repository checkout" >&2
+              exit 3
+            fi
+            app_dir="${active_matches[0]}"
           fi
 
           # The application deployer owns its own lock, volume identity,
