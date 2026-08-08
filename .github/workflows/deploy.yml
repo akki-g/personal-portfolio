@@ -178,9 +178,12 @@ jobs:
             wget -q -O- http://127.0.0.1:8080/healthz >/dev/null
 
           # ACME can only validate after public DNS points at this instance.
-          if getent ahostsv4 jobs.its-akki.com \
-            | awk '{print $1}' \
-            | grep -qx '52.204.158.12'; then
+          # Query a public resolver instead of the EC2 host resolver, which can
+          # retain an earlier NXDOMAIN response during Route 53 propagation.
+          PUBLIC_DNS="$(curl --fail --silent --show-error --max-time 10 \
+            'https://dns.google/resolve?name=jobs.its-akki.com&type=A' || true)"
+          if printf '%s\n' "$PUBLIC_DNS" \
+            | grep -Eq '"data"[[:space:]]*:[[:space:]]*"52\.204\.158\.12"'; then
             docker compose run --rm --entrypoint certbot certbot certonly \
               --webroot -w /var/www/certbot \
               --email akshat.guduru@gmail.com --agree-tos --no-eff-email \
