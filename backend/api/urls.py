@@ -1,4 +1,5 @@
 from django.urls import path, include
+from .chat import chat
 from .views import (
     ProjectListView, 
     ContactView, 
@@ -6,7 +7,6 @@ from .views import (
     ExperiencesListView, 
     download_resume, 
     get_images, 
-    proxy_to_openai,
     remote_login,
     ssh_connect,
     execute_command,
@@ -20,7 +20,7 @@ urlpatterns = [
     path('api/download-resume/', download_resume, name='download-resume'),
     path('api/get_images/', get_images, name='get_images'),
     path('api/experiences/', ExperiencesListView.as_view(), name='experiences-list'),
-    path('api/proxy_to_openai/', proxy_to_openai, name='proxy_to_openai'),
+    path('api/chat/', chat, name='chat'),
     # Remote Access Endpoints
     path('api/remote/login/', remote_login, name='remote-login'),
     path('api/remote/connect/', ssh_connect, name='ssh-connect'),

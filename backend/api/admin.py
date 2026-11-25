@@ -4,9 +4,18 @@ from .models import Project, Contact, About, Experience
 
 @admin.register(Project)
 class ProjectAdmin(admin.ModelAdmin):
-    list_display = ['title', 'monthyr', 'technologies']
-    search_fields = ['title', 'monthyr', 'technologies']
+    list_display = ['title', 'monthyr', 'on_timeline']
+    search_fields = ['title', 'monthyr', 'technologies', 'summary']
     list_filter = ['monthyr']
+    fieldsets = [
+        (None, {'fields': ['title', 'monthyr', 'technologies', 'repo_link', 'live_link']}),
+        ('Home page timeline', {'fields': ['summary']}),
+        ('Full experience page', {'fields': ['short_desc', 'description', 'content']}),
+    ]
+
+    @admin.display(boolean=True, description='On timeline')
+    def on_timeline(self, obj):
+        return bool(obj.summary.strip())
 
 @admin.register(Contact)
 class ContactAdmin(admin.ModelAdmin):
@@ -25,6 +34,15 @@ class AboutAdmin(admin.ModelAdmin):
 
 @admin.register(Experience)
 class ExperienceAdmin(admin.ModelAdmin):
-    list_display = ['title', 'company', 'role', 'start_mthyr', 'end_mthyr']
-    search_fields = ['title', 'company', 'role', 'start_mthyr', 'end_mthyr']
-    list_filter = ['start_mthyr', 'end_mthyr']
+    list_display = ['title', 'company', 'type', 'start_mthyr', 'end_mthyr', 'on_timeline']
+    search_fields = ['title', 'company', 'role', 'start_mthyr', 'end_mthyr', 'summary']
+    list_filter = ['type', 'start_mthyr', 'end_mthyr']
+    fieldsets = [
+        (None, {'fields': ['type', 'title', 'company', 'role', 'start_mthyr', 'end_mthyr']}),
+        ('Home page timeline', {'fields': ['summary']}),
+        ('Full experience page', {'fields': ['description']}),
+    ]
+
+    @admin.display(boolean=True, description='On timeline')
+    def on_timeline(self, obj):
+        return bool(obj.summary.strip())

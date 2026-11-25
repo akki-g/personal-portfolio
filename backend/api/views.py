@@ -1,41 +1,29 @@
 from django.http import FileResponse
 from django.contrib.sites.shortcuts import get_current_site
 from rest_framework.views import APIView
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import AllowAny, IsAdminUser
+from rest_framework.throttling import ScopedRateThrottle, SimpleRateThrottle
 from django.shortcuts import get_object_or_404
 from .models import Project, Contact, About, Experience
 from .serializers import ProjectSerializer, ContactSerializer, AboutSerializer, ExperienceSerializer
-import requests
-from django.http import JsonResponse
-from django.views.decorators.csrf import csrf_exempt
+from .permissions import ReadOnlyOrStaff, allowed_remote_hosts
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import json
 import paramiko
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-import anthropic
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 load_dotenv(os.path.join(BASE_DIR, ".env"))
-
-# Configure the Claude (Anthropic) client once, after the .env file is loaded.
-# Built lazily so the app still boots even when the key is missing.
-ANTHROPIC_API_KEY = os.getenv("ANTHROPIC_API_KEY")
-anthropic_client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY) if ANTHROPIC_API_KEY else None
-
-# Haiku 4.5 chosen for cost: the system prompt (identity + live DB context) is
-# resent on every stateless request, so token price compounds fast on a higher tier.
-CHAT_MODEL = "claude-haiku-4-5"
 
 # Create your views here.
 
 class ProjectListView(APIView):
+    permission_classes = [ReadOnlyOrStaff]
 
     def get(self, request):
         projects = Project.objects.all()
@@ -49,6 +37,13 @@ class ProjectListView(APIView):
         return Response(serializer.errors, status=400)
 
 class ContactView(APIView):
+    throttle_scope = 'contact'
+
+    def get_permissions(self):
+        return [AllowAny()] if self.request.method == 'POST' else [IsAdminUser()]
+
+    def get_throttles(self):
+        return [ScopedRateThrottle()] if self.request.method == 'POST' else []
 
     def get(self, request):
         contacts = Contact.objects.all()
@@ -62,6 +57,7 @@ class ContactView(APIView):
         return Response(serializer.errors, status=400)
     
 class AboutView(APIView):
+    permission_classes = [ReadOnlyOrStaff]
 
     def get(self, request):
         about = About.objects.all()
@@ -75,6 +71,7 @@ class AboutView(APIView):
         return Response(serializer.errors, status=400)
     
 class ExperiencesListView(APIView):
+    permission_classes = [ReadOnlyOrStaff]
 
     def get(self, request):
         projects = Experience.objects.all()
@@ -116,111 +113,6 @@ def get_images(request):
     return Response(result)
 
 
-def _format_projects_context():
-    projects = Project.objects.all().order_by('-id')
-    if not projects:
-        return ""
-    lines = ["Projects (live from the database):"]
-    for project in projects:
-        links = []
-        if project.repo_link:
-            links.append(f"repo: {project.repo_link}")
-        if project.live_link:
-            links.append(f"live: {project.live_link}")
-        link_text = f" ({', '.join(links)})" if links else ""
-        lines.append(
-            f"- {project.title} [{project.monthyr}]: {project.short_desc} "
-            f"Technologies: {project.technologies}.{link_text}"
-        )
-    return "\n".join(lines)
-
-
-def _format_experience_context():
-    experiences = Experience.objects.all().order_by('-id')
-    if not experiences:
-        return ""
-    lines = ["Experience (live from the database):"]
-    for experience in experiences:
-        lines.append(
-            f"- {experience.title}: {experience.role} at {experience.company} "
-            f"({experience.start_mthyr} to {experience.end_mthyr}): {experience.description}"
-        )
-    return "\n".join(lines)
-
-
-def build_profile_context():
-    """Fresh project/experience facts pulled from the DB, appended to the chat system prompt."""
-    blocks = [_format_projects_context(), _format_experience_context()]
-    return "\n\n".join(block for block in blocks if block)
-
-
-@csrf_exempt
-def proxy_to_openai(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=405)
-
-    if anthropic_client is None:
-        return JsonResponse(
-            {"error": "Chat is not configured", "details": "ANTHROPIC_API_KEY is not set on the server"},
-            status=503,
-        )
-
-    try:
-        payload = json.loads(request.body.decode('utf-8'))
-        messages = payload.get("messages", [])
-
-        # Claude takes the system prompt as a top-level argument and the
-        # conversation history as user/assistant turns only, so split the
-        # incoming OpenAI-style messages accordingly.
-        system_prompt = None
-        chat_messages = []
-        for msg in messages:
-            role = msg.get("role")
-            content = msg.get("content", "")
-            if role == "system":
-                system_prompt = content
-            elif role in ("user", "assistant"):
-                chat_messages.append({"role": role, "content": content})
-
-        # Append live project/experience facts from the DB so the bot never
-        # relies on a hand-maintained, easily-stale copy in the frontend.
-        profile_context = build_profile_context()
-        if profile_context:
-            system_prompt = f"{system_prompt}\n\n{profile_context}" if system_prompt else profile_context
-
-        response = anthropic_client.messages.create(
-            model=CHAT_MODEL,
-            max_tokens=1024,
-            system=system_prompt,
-            # No-op below the model's ~4K-token cache floor today, but free to
-            # leave on: it starts paying off the moment the DB context grows past it.
-            cache_control={"type": "ephemeral"},
-            thinking={"type": "disabled"},  # snappy, concise replies for a chatbot
-            messages=chat_messages,
-        )
-
-        # Concatenate the text blocks of the response (ignoring any non-text blocks).
-        reply = "".join(block.text for block in response.content if block.type == "text")
-
-        # Return an OpenAI-compatible response so the frontend needs no changes.
-        return JsonResponse({
-            "choices": [{
-                "message": {
-                    "role": "assistant",
-                    "content": reply,
-                },
-                "finish_reason": "stop",
-                "index": 0,
-            }],
-            "model": response.model,
-        })
-    except json.JSONDecodeError as e:
-        return JsonResponse({"error": "Invalid JSON payload", "details": str(e)}, status=400)
-    except anthropic.APIStatusError as e:
-        return JsonResponse({"error": "Chat provider error", "details": e.message}, status=502)
-    except Exception as e:
-        return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
-
 # Remote Access Views with Security
 BLACKLISTED_COMMANDS = [
     'rm -rf', 'sudo rm', 'dd if=', 'mkfs', 'fdisk', 'parted',
@@ -238,38 +130,52 @@ def is_command_safe(command):
             return False
     return True
 
-@api_view(['POST'])
-def remote_login(request):
-    """Authenticate and get JWT token for remote access"""
-    username = request.data.get('username')
-    password = request.data.get('password')
-    
-    if not username or not password:
-        return Response({'error': 'Username and password required'}, status=400)
-    
-    # For demo purposes - in production, use proper authentication
-    if username == 'admin' and password == 'secure_password':
-        user = authenticate(username=username, password=password)
-        if not user:
-            # Create a simple token without database user
-            from django.contrib.auth.models import User
-            user, created = User.objects.get_or_create(username=username)
-        
-        refresh = RefreshToken.for_user(user)
-        return Response({
-            'access': str(refresh.access_token),
-            'refresh': str(refresh),
-            'message': 'Login successful'
-        })
-    
-    return Response({'error': 'Invalid credentials'}, status=401)
+class RemoteLoginThrottle(SimpleRateThrottle):
+    """Limits password attempts per client IP."""
+    scope = 'remote-login'
+
+    def get_cache_key(self, request, view):
+        return self.cache_format % {'scope': self.scope, 'ident': self.get_ident(request)}
+
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([AllowAny])
+@throttle_classes([RemoteLoginThrottle])
+def remote_login(request):
+    """Exchange a staff account's Django username/password for a JWT for remote access."""
+    username = request.data.get('username')
+    password = request.data.get('password')
+
+    if not username or not password:
+        return Response({'error': 'Username and password required'}, status=400)
+
+    user = authenticate(username=username, password=password)
+    if user is None or not user.is_staff:
+        return Response({'error': 'Invalid credentials'}, status=401)
+
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'message': 'Login successful'
+    })
+
+
+def remote_host_error(host):
+    """Return an error response unless `host` is on the REMOTE_SSH_HOSTS allow-list."""
+    if host not in allowed_remote_hosts():
+        return Response({'error': 'That host is not allowed for remote access.'}, status=403)
+    return None
+
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
 def ssh_connect(request):
     """Establish SSH connection to remote server"""
     try:
         host = request.data.get('host', '192.168.4.196')
+        host_error = remote_host_error(host)
+        if host_error:
+            return host_error
         port = request.data.get('port', 2222)
         username = request.data.get('username', 'akshatguduru')
         password = request.data.get('password')
@@ -302,11 +208,14 @@ def ssh_connect(request):
         return Response({'error': f'SSH connection error: {str(e)}'}, status=500)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAdminUser])
 def execute_command(request):
     """Execute command on remote server via SSH"""
     try:
         host = request.data.get('host', '192.168.4.196')
+        host_error = remote_host_error(host)
+        if host_error:
+            return host_error
         port = request.data.get('port', 2222)
         username = request.data.get('username', 'akshatguduru')
         password = request.data.get('password')
@@ -349,11 +258,14 @@ def execute_command(request):
         return Response({'error': f'Command execution error: {str(e)}'}, status=500)
 
 @api_view(['POST'])
-@permission_classes([IsAuthenticated])
+@permission_classes([IsAdminUser])
 def list_files(request):
     """List files in directory via SFTP"""
     try:
         host = request.data.get('host', '192.168.4.196')
+        host_error = remote_host_error(host)
+        if host_error:
+            return host_error
         port = request.data.get('port', 2222)
         username = request.data.get('username', 'akshatguduru')
         password = request.data.get('password')

@@ -13,6 +13,11 @@ class Project(models.Model):
     repo_link = models.URLField(max_length=200, blank=True, null=True)
     live_link = models.URLField(max_length=200, blank=True, null=True)
     technologies = models.TextField(default='Technologies used in the project')
+    summary = models.TextField(
+        blank=True,
+        default='',
+        help_text='One or two sentences for the home page timeline. Leave blank to keep this project off the timeline.',
+    )
 
 
 
@@ -109,12 +114,22 @@ class About(models.Model):
 
 
 class Experience(models.Model):
+    class Type(models.TextChoices):
+        RESEARCH = 'research', 'Research'
+        INTERNSHIP = 'internship', 'Internship'
+
     title = models.CharField(max_length=100)
+    type = models.CharField(max_length=20, choices=Type.choices, default=Type.RESEARCH)
     company = models.CharField(max_length = 100)
     role = models.CharField(max_length = 100)
     start_mthyr = models.CharField(max_length=100)
     end_mthyr = models.CharField(max_length=100)
     description = models.TextField(default='Description of the experience')
-    
+    summary = models.TextField(
+        blank=True,
+        default='',
+        help_text='One or two sentences for the home page timeline. Leave blank to keep this position off the timeline.',
+    )
+
     def __str__(self):
         return self.title

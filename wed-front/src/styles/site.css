@@ -1,0 +1,86 @@
+/* Shared page chrome: grid, top bar, footer. */
+
+.site {
+  --pad: 40px;
+  --gap: 24px;
+  --ink: #e9edf4;
+  --ink-inverse: #08101f;
+  --line: rgba(233, 237, 244, 0.2);
+  --hero: clamp(34px, 4.6vw, 66px);
+
+  min-height: 100vh;
+  /* The gradient itself is on <html> (index.css) so it also fills overscroll areas. */
+}
+
+.site a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.site b { font-weight: 700; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--gap);
+  padding: 0 var(--pad);
+}
+
+/* Top bar */
+.top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding: 22px var(--pad);
+  border-bottom: 1px solid var(--line);
+}
+
+.site .top a { text-decoration: none; }
+.site .top a:hover { text-decoration: underline; }
+.top .name { font-weight: 700; white-space: nowrap; }
+.top nav { display: flex; gap: 28px; }
+
+/* Footer */
+.bottom {
+  padding: 56px var(--pad) 32px;
+  border-top: 1px solid var(--line);
+}
+
+.site .bottom .mail {
+  display: inline-block;
+  font-size: calc(var(--hero) * 1.15);
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 0.15em;
+  overflow-wrap: anywhere;
+}
+
+.base {
+  display: flex;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 72px;
+}
+
+.base-links { display: flex; gap: 28px; }
+
+@media (max-width: 720px) {
+  .site {
+    --pad: 22px;
+    --gap: 16px;
+    font-size: 18px;
+    line-height: 1.6;
+  }
+
+  .top { padding-top: 18px; padding-bottom: 18px; }
+  .top nav { gap: 20px; }
+  .hide-sm { display: none; }
+
+  .site .bottom .mail { font-size: 7.4vw; }
+  .base { margin-top: 48px; }
+}
