@@ -2,12 +2,12 @@
 
 Visitors send only their own conversation turns; the system prompt (who Akshat is, plus live
 projects and experience from the database) is built here on the server, so the endpoint can't
-be used as a general-purpose Claude proxy. Per-visitor and site-wide rate limits cap spend.
+be used as a general-purpose OpenAI proxy. Per-visitor and site-wide rate limits cap spend.
 """
 import logging
 import os
 
-import anthropic
+import openai
 from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -17,8 +17,8 @@ from .models import Experience, Project
 
 logger = logging.getLogger(__name__)
 
-# Current-generation Haiku: the cheapest tier, plenty for short factual answers.
-CHAT_MODEL = os.getenv('CHAT_MODEL', 'claude-haiku-5-5')
+# A small, cheap model is plenty for short factual answers. Override with CHAT_MODEL.
+CHAT_MODEL = os.getenv('CHAT_MODEL', 'gpt-5.4-mini')
 
 MAX_MESSAGES = 12          # last six exchanges
 MAX_MESSAGE_CHARS = 800    # per turn
@@ -115,8 +115,8 @@ _client = None
 
 def _get_client():
     global _client
-    if _client is None and os.getenv('ANTHROPIC_API_KEY'):
-        _client = anthropic.Anthropic(timeout=30.0, max_retries=1)
+    if _client is None and os.getenv('OPENAI_API_KEY'):
+        _client = openai.OpenAI(timeout=30.0, max_retries=1)
     return _client
 
 
@@ -133,27 +133,27 @@ def chat(request):
         return Response({'error': UNAVAILABLE}, status=503)
 
     try:
-        response = client.messages.create(
+        response = client.responses.create(
             model=CHAT_MODEL,
-            max_tokens=2000,
+            # Same text on every request (no timestamps), so OpenAI's automatic prompt cache applies.
+            instructions=f'{PERSONA}\n\n{_profile_facts()}',
+            input=messages,
             # Low effort: short factual answers don't need deep reasoning.
-            output_config={'effort': 'low'},
-            # Same bytes on every request (no timestamps), so repeat visitors hit the prompt cache.
-            system=[{'type': 'text', 'text': f'{PERSONA}\n\n{_profile_facts()}', 'cache_control': {'type': 'ephemeral'}}],
-            messages=messages,
+            reasoning={'effort': 'low'},
+            max_output_tokens=1500,
+            prompt_cache_key='portfolio-chat',
         )
-    except anthropic.RateLimitError:
-        logger.warning('chat: rate limited by the Claude API')
+    except openai.RateLimitError as error:
+        # Also raised when the account is out of credits.
+        logger.warning('chat: OpenAI rate limit or quota (request %s)', error.request_id)
         return Response({'error': UNAVAILABLE}, status=503)
-    except anthropic.APIStatusError as error:
-        logger.error('chat: Claude API error %s (request %s)', error.status_code, error.request_id)
+    except openai.APIStatusError as error:
+        logger.error('chat: OpenAI API error %s (request %s)', error.status_code, error.request_id)
         return Response({'error': UNAVAILABLE}, status=502)
-    except anthropic.APIConnectionError:
-        logger.error('chat: could not reach the Claude API')
+    except openai.APIConnectionError:
+        logger.error('chat: could not reach the OpenAI API')
         return Response({'error': UNAVAILABLE}, status=503)
 
-    if response.stop_reason == 'refusal':
-        return Response({'reply': DECLINED})
-
-    reply = ' '.join(block.text for block in response.content if block.type == 'text').strip()
+    # output_text is empty when the model refuses or runs out of output tokens.
+    reply = (response.output_text or '').strip()
     return Response({'reply': reply or DECLINED})
