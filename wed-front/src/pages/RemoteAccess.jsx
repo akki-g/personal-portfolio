@@ -14,7 +14,7 @@ const RemoteAccess = () => {
     
     // Auth form state
     const [credentials, setCredentials] = useState({
-        username: 'admin',
+        username: '',
         password: '',
         sshHost: '192.168.4.196',
         sshPort: '2222',

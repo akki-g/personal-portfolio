@@ -1,0 +1,110 @@
+.chat {
+  padding-top: 28px;
+  padding-bottom: 96px;
+  border-top: 1px solid var(--line);
+}
+
+.chat-side { grid-column: 1 / 4; }
+.chat-side h2 { font-size: inherit; font-weight: 700; }
+.chat-side p { margin-top: 6px; max-width: 30ch; }
+
+.chat-main { grid-column: 5 / -1; max-width: 760px; }
+
+/* Conversation */
+.chat-log {
+  list-style: none;
+  max-height: 440px;
+  overflow-y: auto;
+  margin-bottom: 24px;
+  border-top: 1px solid var(--line);
+}
+
+.chat-turn {
+  display: grid;
+  grid-template-columns: 90px 1fr;
+  column-gap: var(--gap);
+  padding: 16px 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.chat-turn p { white-space: pre-wrap; }
+
+/* Example questions, shown before the first message */
+.chat-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.chat-suggestions button {
+  min-height: 44px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  background: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+}
+
+.chat-suggestions button:hover { border-color: var(--ink); }
+
+/* Input row */
+.chat-form {
+  display: flex;
+  gap: 12px;
+}
+
+.chat-form input {
+  flex: 1;
+  min-width: 0;
+  min-height: 52px;
+  padding: 0 16px;
+  border: 1px solid var(--line);
+  background: rgba(233, 237, 244, 0.04);
+  color: inherit;
+  font: inherit;
+}
+
+.chat-form input::placeholder { color: inherit; opacity: 0.6; }
+.chat-form input:focus { outline: none; border-color: var(--ink); }
+
+.chat-form button {
+  min-height: 52px;
+  padding: 0 24px;
+  border: 0;
+  background: var(--ink);
+  color: var(--ink-inverse);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.chat-form button:disabled,
+.chat-suggestions button:disabled { opacity: 0.5; cursor: default; }
+
+.chat-error { margin-top: 12px; }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+@media (max-width: 1080px) {
+  .chat-side { grid-column: 1 / 5; }
+  .chat-main { grid-column: 6 / -1; }
+  .chat-turn { grid-template-columns: 1fr; row-gap: 2px; }
+}
+
+@media (max-width: 720px) {
+  .chat { padding-top: 40px; padding-bottom: 40px; row-gap: 24px; border-top: 0; }
+  .chat-side, .chat-main { grid-column: 1 / -1; }
+  .chat-side p { max-width: none; }
+  .chat-log { max-height: 55vh; }
+  .chat-suggestions { flex-direction: column; }
+  .chat-suggestions button { text-align: left; }
+}

@@ -120,6 +120,14 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.AllowAny',
     ],
+    'DEFAULT_THROTTLE_RATES': {
+        'contact': '5/hour',
+        'remote-login': '10/hour',
+        'chat-burst': '8/minute',
+        'chat-daily': '60/day',
+        'chat-site': '1000/day',
+    },
+    'NUM_PROXIES': 1,
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 10,
 }
