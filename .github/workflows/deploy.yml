@@ -4,6 +4,13 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      deploy_job_signal:
+        description: >-
+          Also pull and rebuild Job Signal from its main branch. Off by default:
+          portfolio deploys never touch Job Signal unless this is checked.
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -30,6 +37,7 @@ jobs:
           chmod 600 "$HOME/.ssh/portfolio-deploy"
 
       - name: Build encrypted Job Signal environment file
+        if: ${{ inputs.deploy_job_signal == true }}
         shell: bash
         env:
           JOBS_POSTGRES_PASSWORD: ${{ secrets.JOBS_POSTGRES_PASSWORD }}
@@ -71,6 +79,7 @@ jobs:
           PYTHON
 
       - name: Upload Job Signal environment file
+        if: ${{ inputs.deploy_job_signal == true }}
         shell: bash
         run: |
           set -Eeuo pipefail
@@ -83,13 +92,15 @@ jobs:
 
       - name: Deploy Docker stack
         shell: bash
+        env:
+          DEPLOY_JOB_SIGNAL: ${{ inputs.deploy_job_signal == true }}
         run: |
           set -Eeuo pipefail
           ssh \
             -o BatchMode=yes \
             -o StrictHostKeyChecking=accept-new \
             -i "$HOME/.ssh/portfolio-deploy" \
-            ubuntu@52.204.158.12 'bash -se' <<'REMOTE'
+            ubuntu@52.204.158.12 "DEPLOY_JOB_SIGNAL=$DEPLOY_JOB_SIGNAL bash -se" <<'REMOTE'
           set -Eeuo pipefail
           trap 'rm -f /home/ubuntu/job-signal.env' EXIT
           cd /home/ubuntu/personal-portfolio
@@ -107,19 +118,55 @@ jobs:
           make prod-up
 
           JOBS_DIR=/home/ubuntu/automated_swe_jobs
-          if [ ! -d "$JOBS_DIR/.git" ]; then
-            git clone https://github.com/akki-g/automated_swe_jobs.git "$JOBS_DIR"
-          fi
-          git -C "$JOBS_DIR" fetch origin main
-          git -C "$JOBS_DIR" checkout main
-          git -C "$JOBS_DIR" pull --ff-only origin main
-          install -m 600 /home/ubuntu/job-signal.env "$JOBS_DIR/.env"
-          rm -f /home/ubuntu/job-signal.env
-
           docker network inspect portfolio-edge >/dev/null 2>&1 \
             || docker network create portfolio-edge >/dev/null
-          docker compose --project-directory "$JOBS_DIR" \
-            -f "$JOBS_DIR/compose.production.yml" up --build -d --remove-orphans
+
+          # Job Signal is its own product with its own config and run modes, so a
+          # portfolio push leaves it alone. Rebuild it only from a manual run with
+          # "deploy_job_signal" checked.
+          if [ "${DEPLOY_JOB_SIGNAL:-false}" = "true" ]; then
+            if [ ! -d "$JOBS_DIR/.git" ]; then
+              git clone https://github.com/akki-g/automated_swe_jobs.git "$JOBS_DIR"
+            fi
+            git -C "$JOBS_DIR" fetch origin main
+            git -C "$JOBS_DIR" checkout main
+            git -C "$JOBS_DIR" pull --ff-only origin main
+
+            # Merge the keys this workflow manages into the existing .env instead of
+            # replacing the file: the server's .env also holds settings that only
+            # exist there (OAuth, notification secret, model choices, ...).
+            python3 - "$JOBS_DIR/.env" /home/ubuntu/job-signal.env <<'MERGE'
+          import os
+          import sys
+
+          target, updates_path = sys.argv[1], sys.argv[2]
+          updates = {}
+          for line in open(updates_path, encoding="utf-8").read().splitlines():
+              if "=" in line:
+                  key, value = line.split("=", 1)
+                  updates[key] = value
+
+          lines = open(target, encoding="utf-8").read().splitlines() if os.path.exists(target) else []
+          merged, seen = [], set()
+          for line in lines:
+              key = line.split("=", 1)[0].strip()
+              if "=" in line and not line.lstrip().startswith("#") and key in updates:
+                  merged.append(f"{key}={updates[key]}")
+                  seen.add(key)
+              else:
+                  merged.append(line)
+          merged += [f"{key}={value}" for key, value in updates.items() if key not in seen]
+
+          tmp = target + ".tmp"
+          with open(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), "w", encoding="utf-8") as out:
+              out.write("\n".join(merged) + "\n")
+          os.replace(tmp, target)
+          MERGE
+            rm -f /home/ubuntu/job-signal.env
+
+            docker compose --project-directory "$JOBS_DIR" \
+              -f "$JOBS_DIR/compose.production.yml" up --build -d --remove-orphans
+          fi
 
           # Keep the portfolio project card data-driven and safe to rerun.
           docker compose exec -T backend python manage.py shell <<'PYTHON'

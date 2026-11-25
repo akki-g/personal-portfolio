@@ -144,6 +144,15 @@ class AccessControlTests(TestCase):
             ssh_client.return_value.connect.assert_called_once()
 
 
+def _http():
+    """The HTTP library the installed OpenAI SDK is built on (httpx2 in 3.x, httpx before)."""
+    try:
+        import httpx2 as http
+    except ImportError:
+        import httpx as http
+    return http
+
+
 class ChatTests(TestCase):
     """The chat builds its own system prompt, validates turns, and is rate-limited."""
 
@@ -151,10 +160,9 @@ class ChatTests(TestCase):
         cache.clear()
         self.client_api = APIClient()
         Project.objects.create(title='CitePilot', monthyr='Jun 2026', short_desc='Research writing tool.', technologies='FastAPI')
-        reply = mock.Mock(stop_reason='end_turn', content=[mock.Mock(type='text', text='CitePilot uses FastAPI.')])
-        self.claude = mock.Mock()
-        self.claude.messages.create.return_value = reply
-        patcher = mock.patch('api.chat._get_client', return_value=self.claude)
+        self.llm = mock.Mock()
+        self.llm.responses.create.return_value = mock.Mock(output_text='CitePilot uses FastAPI.')
+        patcher = mock.patch('api.chat._get_client', return_value=self.llm)
         patcher.start()
         self.addCleanup(patcher.stop)
 
@@ -168,11 +176,11 @@ class ChatTests(TestCase):
         response = self.ask([{'role': 'user', 'content': 'What is CitePilot?'}])
         self.assertEqual(response.status_code, 200)
         self.assertEqual(response.json(), {'reply': 'CitePilot uses FastAPI.'})
-        kwargs = self.claude.messages.create.call_args.kwargs
-        system_text = kwargs['system'][0]['text']
+        kwargs = self.llm.responses.create.call_args.kwargs
+        system_text = kwargs['instructions']
         self.assertIn('portfolio website', system_text)
         self.assertIn('CitePilot (Jun 2026)', system_text)  # live DB facts
-        self.assertEqual(kwargs['messages'], [{'role': 'user', 'content': 'What is CitePilot?'}])
+        self.assertEqual(kwargs['input'], [{'role': 'user', 'content': 'What is CitePilot?'}])
 
     def test_rejects_malformed_conversations(self):
         bad = [
@@ -184,7 +192,7 @@ class ChatTests(TestCase):
         ]
         for messages in bad:
             self.assertEqual(self.ask(messages).status_code, 400, messages)
-        self.claude.messages.create.assert_not_called()
+        self.llm.responses.create.assert_not_called()
 
     def test_keeps_only_recent_turns(self):
         turns = []
@@ -192,22 +200,31 @@ class ChatTests(TestCase):
             turns += [{'role': 'user', 'content': f'q{i}'}, {'role': 'assistant', 'content': f'a{i}'}]
         turns.append({'role': 'user', 'content': 'latest'})
         self.assertEqual(self.ask(turns).status_code, 200)
-        sent = self.claude.messages.create.call_args.kwargs['messages']
+        sent = self.llm.responses.create.call_args.kwargs['input']
         self.assertLessEqual(len(sent), 12)
         self.assertEqual(sent[0]['role'], 'user')
         self.assertEqual(sent[-1]['content'], 'latest')
 
-    def test_refusal_gets_a_polite_reply(self):
-        self.claude.messages.create.return_value = mock.Mock(stop_reason='refusal', content=[])
+    def test_empty_output_gets_a_polite_reply(self):
+        self.llm.responses.create.return_value = mock.Mock(output_text='')
         self.assertIn("can't help", self.ask([{'role': 'user', 'content': 'hi'}]).json()['reply'])
 
     def test_api_errors_do_not_leak_details(self):
-        import anthropic
-        request = mock.Mock()
-        self.claude.messages.create.side_effect = anthropic.APIConnectionError(request=request)
+        import openai
+        request = _http().Request('POST', 'https://api.openai.com/v1/responses')
+        self.llm.responses.create.side_effect = openai.APIConnectionError(request=request)
         response = self.ask([{'role': 'user', 'content': 'hi'}])
         self.assertEqual(response.status_code, 503)
         self.assertEqual(set(response.json()), {'error'})
+
+    def test_out_of_credits_returns_503(self):
+        import openai
+        http = _http()
+        response = http.Response(429, request=http.Request('POST', 'https://api.openai.com/v1/responses'))
+        self.llm.responses.create.side_effect = openai.RateLimitError('no credits', response=response, body=None)
+        reply = self.ask([{'role': 'user', 'content': 'hi'}])
+        self.assertEqual(reply.status_code, 503)
+        self.assertIn('unavailable', reply.json()['error'])
 
     def test_unconfigured_key_returns_503(self):
         with mock.patch('api.chat._get_client', return_value=None):

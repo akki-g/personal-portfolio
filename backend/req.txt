@@ -8,5 +8,5 @@ python-dotenv
 paramiko
 djangorestframework-simplejwt
 cryptography
-anthropic>=2.0
+openai>=2.0
 whitenoise

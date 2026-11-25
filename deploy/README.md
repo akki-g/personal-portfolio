@@ -33,7 +33,7 @@ Ports collide with another project's stack? Override them:
 `BACKEND_PORT=9010 FRONTEND_PORT=9082 make up` (or export the same vars before
 a raw `docker compose` call).
 
-`backend/.env` must contain `ANTHROPIC_API_KEY` for the chat box to work. The
+`backend/.env` must contain `OPENAI_API_KEY` for the "Ask about me" chat to work. The
 backend runs with `DJANGO_DEBUG=True` in this overlay.
 
 ## Production (single VPS)
@@ -43,7 +43,7 @@ Prereqs: Docker + compose on the VPS, DNS A-records for `its-akki.com`,
 
 1. Put production secrets in `backend/.env`:
    ```
-   ANTHROPIC_API_KEY=sk-ant-...
+   OPENAI_API_KEY=sk-...
    DJANGO_SECRET_KEY=<fresh 50-char secret>
    ```
    (`DJANGO_DEBUG=False`, `ALLOWED_HOSTS`, and CSRF origins are already set for
